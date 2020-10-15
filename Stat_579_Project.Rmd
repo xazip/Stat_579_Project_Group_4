@@ -1,0 +1,22 @@
+---
+title: "Untitled"
+author: "Everyone"
+date: "10/15/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+
+
+df <- read.csv("all_lawsuits_2008_to_2019.xlsx")
+
+
+
+
+```
