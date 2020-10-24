@@ -1,7 +1,7 @@
 ---
-title: "Untitled"
-author: "Everyone"
-date: "10/15/2020"
+title: "Stat 579 Project"
+author: "Andrew Maloney"
+date: "10/23/2020"
 output: html_document
 ---
 
@@ -12,12 +12,170 @@ knitr::opts_chunk$set(echo = TRUE)
 ## R Markdown
 
 ```{r}
+# Can use this function to quickly install and load all packages
+
+#Load required Packages
 
 
-df <- read.csv("all_lawsuits_2008_to_2019.xlsx")
+
+#packages <- c("readxl", "tidyverse", "purrr", "shiny", "shinydashboard",
+             # "shinydashboardPlus", "shinythemes", "stringr", "ggplot2", "plotly", "lubridate",
+              #"viridis", "rayshader")
+
+#for (pkgs in packages){
+# if(!require(pkgs, character.only = TRUE)){ # Condition 
+#  install.packages(pkgs) # Install if not in set 1
+# library(pkgs) # Load if installed
+#}
+#}
 
 
-#This is my branch
-#This is my branch 2
+
+
+
+```
+
+
+```{r, warning=FALSE}
+
+
+library(readxl)
+library(tidyverse)
+library(purrr) #optional
+library(shiny) #optional
+library(shinydashboard) #optional
+library(shinydashboardPlus) #optional
+library(shinythemes) #optional
+library(stringr)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+library(viridis) #optional
+library(rayshader) #optional (Heike hates this package but I love it lol)
+
+library(naniar)
+
+library(tidyr)
+
+```
+
+
+```{r, warning=FALSE}
+
+df <- read_excel("all_lawsuits_2008_to_2019.xlsx")
+
+head(df)
+```
+
+#### Case Number: Identification of the case
+#### Payee: Person or group of people who is/are owed money 
+#### Payment Amount:  Amount paid to the Payee
+#### Fees and Costs: Costs associated with the settlement
+#### Primary Cause: Short insight behind the settlement
+#### City Department Involved: Department of Chicago involved in the settlement
+#### Disposition: Final type of Settlement
+#### Tort: Number of wrongful acts or infringement of rights leading to civil legal liability(big no no)
+#### Date to Comptroller: Date to comptroller ?
+#### Year to Comptroller: Year to Comptroller ?
+#### Monto to Comptroller: Month to Comptroller?
+#### Payment Amount(Millions): Payment amount in terms of millions of dollars
+#### Fees and Costs(Millions): Fees and Costs in terms of millions of dollars
+#### Total Paid: Payment Amount + Fees and Cost
+#### Total Paid(millions): Total Paid in terms of millions of dollars
+
+```{r}
+#Spaces in column names are a no no for me so I am going to replace them with underscores using gsub
+
+names(df) <- gsub(" ", "_", names(df))
+
+```
+
+
+```{r}
+# Let's first investigate the missing values throughtout the data set
+
+
+vis_miss(df)
+
+df %>%
+  gather(key = "columns", value = "column_values") %>%
+    mutate(missing_values = is.na(column_values)) %>%
+      group_by(columns) %>%
+        mutate(total_values = n()) %>%
+          group_by(columns, missing_values, total_values)%>%
+       summarise(number_of_missing_values = n()) %>%
+        #filter(missing_values == TRUE) %>% select(-missing_values) %>% can see total number of NA values for each column
+          mutate(percent_missing = (number_of_missing_values/total_values) * 100) %>%
+  ggplot(aes(x = reorder(columns, desc(percent_missing)), y = percent_missing, fill = missing_values))+
+    geom_bar(stat = "identity")+
+      coord_flip()+ 
+        ggtitle("Percentage of Missing Values throughout the Dataset")+
+          xlab("Column Names")+ylab("Percentage")+
+            theme_bw() + scale_fill_manual(values = c("Chartreuse3", "firebrick2"))
+
+
+# 0.48% missing values for Case_Number
+# <0.1% missing values for Payment_Amount
+# <0.1% missing values for Fees_and_Costs
+# <0.1% missing values for Primary_Cause
+# 50.36% missing values for Tort
+# <0.1% missing values for Date_to_Comptroller
+# <0.1% missing values for Year_to_Comptroller
+# <0.1% missing values for Month_to_Comptroller
+# <0.1% missing values for Payment_Amount(millions)
+# <0.1% missing values for Fees_and_Costs(millions)
+# <0.1% missing values for Total_Paid
+# <0.1% missing values for Total_Paid(Millsions)
+# 100 % missing values for Payment_Fund, Effective_Data, Due_Date, and Client_Department
+
+# 3 Columns contain no missing values
+# 16 columns contain missing values, 4 out of those 16 columns are completely missing
+
+```
+
+
+
+```{r}
+# Columns that are 100% missing data are of no use so I am removing them
+
+df <- df %>% select(-Payment_Fund, -Effective_Date, -Due_Date, -Client_Department)
+
+```
+
+## Analysis of remaing missing values
+
+```{r}
+
+#Tort column is easy fix, NA should be 0
+
+df <- df %>%
+  mutate(Tort = ifelse(is.na(Tort) == TRUE, 0, Tort))
+
+
+```
+
+```{r}
+
+df %>%
+  gather(key = "columns", value = "column_values") %>%
+    mutate(missing_values = is.na(column_values)) %>%
+          group_by(columns, missing_values)%>%
+       summarise(number_of_missing_values = n()) %>%
+        filter(missing_values == TRUE) %>% select(-missing_values) 
+
+
+# There are only 79 missing values left.  Do these values have a pattern or are they just missing
+
+df %>% filter(is.na(Case_Number) == TRUE) #Looks like case Numbers are missing on there own (1)
+
+df %>% filter(is.na(Date_to_Comptroller) == TRUE) # Date_to_Comptroller is the joined Year, Month, including day, there each have 2 missing values making a total of 6.  This should be re-separated. (3)
+
+df %>% filter(is.na(Fees_and_Costs) == TRUE) # Fees_and_cost and Fees_and_costs(millions) are linked.  Can remove missing values or take average value based on Primary_Cause (2)
+
+df %>% filter(is.na(Payment_Amount) == TRUE) # Payment_Amount and Payment_Amount(millions) are linked.  The Fees_and_Costs for this observation are really high, could be an entry error.  Need to look at average Payment_Amount and Fees_Costs (2) associated with "UNLAWFUL SEARCH/FALSE ARREST
+
+df %>% filter(is.na(Total_Paid) == TRUE) # One of the observations for the row containing missing Total_Paid has a valid Payment amount. Possible Entry issue. The other one is linked with the really high Fees_and_Costs observation.  Therefore it could be possible that 3 observations are linked across Total_Paid, Payment_Amount, and Fees_and_Costs (2)
+
+df %>% filter(is.na(Primary_Cause) == TRUE) # Missing primary cost deals with Transportation department and has a date.  Probably can look up or remove
 
 ```
