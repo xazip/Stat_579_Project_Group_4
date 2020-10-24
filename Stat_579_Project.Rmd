@@ -168,7 +168,7 @@ df %>%
 
 df %>% filter(is.na(Case_Number) == TRUE) #Looks like case Numbers are missing on there own (1)
 
-df %>% filter(is.na(Date_to_Comptroller) == TRUE) # Date_to_Comptroller is the joined Year, Month, including day, there each have 2 missing values making a total of 6.  This should be re-separated. (3)
+df %>% filter(is.na(Date_to_Comptroller) == TRUE) # Date_to_Comptroller is the joined Year, Month, including day, they each have 2 missing values making a total of 6.  This should be re-separated to include day names could be better as well. (3)
 
 df %>% filter(is.na(Fees_and_Costs) == TRUE) # Fees_and_cost and Fees_and_costs(millions) are linked.  Can remove missing values or take average value based on Primary_Cause (2)
 
