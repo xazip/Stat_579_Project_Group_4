@@ -92,7 +92,7 @@ names(df) <- gsub(" ", "_", names(df))
 
 
 ```{r}
-# Let's first investigate the missing values throughtout the data set
+# Let's first investigate the missing values throughout the data set
 
 
 vis_miss(df)
@@ -166,7 +166,7 @@ df %>%
 
 # There are only 79 missing values left.  Do these values have a pattern or are they just missing
 
-df %>% filter(is.na(Case_Number) == TRUE) #Looks like case Numbers are missing on there own (1)
+df %>% filter(is.na(Case_Number) == TRUE) #Looks like case Numbers are missing on their own (1)
 
 df %>% filter(is.na(Date_to_Comptroller) == TRUE) # Date_to_Comptroller is the joined Year, Month, including day, they each have 2 missing values making a total of 6.  This should be re-separated to include day names could be better as well. (3)
 
@@ -179,3 +179,35 @@ df %>% filter(is.na(Total_Paid) == TRUE) # One of the observations for the row c
 df %>% filter(is.na(Primary_Cause) == TRUE) # Missing primary cost deals with Transportation department and has a date.  Probably can look up or remove
 
 ```
+
+# Marie's stuff begins here
+
+## Are there specific times during the year where certain departments are involved in more lawsuits?
+
+```{r, echo = T}
+df2 <- df %>% group_by(City_Department_Involved) %>% summarize(dept_count = n()) %>% arrange(desc(dept_count))
+```
+
+There are 75 different city departments that had lawsuits filed against them. Many of the department names are very similar, e.g. water management/water and water management. These departments could be potentially combined for analysis purposes, but for this preliminary analysis, we will focus on departments that had more than 1,000 lawsuits filed against them. They are:
+
+* Police (5,049 lawsuits)
+
+* City wide (1428 lawsuits)
+
+* Streets and sanitation (1419 lawsuits)
+
+* Transportation (1297 lawsuits)
+
+* Water management/water (1205 lawsuits)
+
+We will use a visualization to see if these departments are more likely to be sued at certain times of the year. We will examine the data at the month level.
+
+```{r, echo = T}
+df_top5 <- df %>% filter(City_Department_Involved %in% c("POLICE", "CITY WIDE", "STREETS & SANITATION", "TRANSPORTATION", "WATER MGMT / WATER"))
+df_top5 <- df_top5 %>% mutate(month = factor(Month_to_Comptroller))
+df_top5 %>% ggplot(aes(x = Month_to_Comptroller, fill = City_Department_Involved))+
+  geom_bar()+
+  scale_x_continuous(breaks = seq(1, 12, 1))
+```
+
+We can see that the City Wide department was sued a lot during June. We can also see that the Police department tends to have the most lawsuits filed against it in every other month. Water Management/Water sees an uptick in lawsuits during April and May and again in September and October.
