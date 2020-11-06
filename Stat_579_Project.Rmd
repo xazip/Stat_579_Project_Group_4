@@ -205,9 +205,56 @@ We will use a visualization to see if these departments are more likely to be su
 ```{r, echo = T}
 df_top5 <- df %>% filter(City_Department_Involved %in% c("POLICE", "CITY WIDE", "STREETS & SANITATION", "TRANSPORTATION", "WATER MGMT / WATER"))
 df_top5 <- df_top5 %>% mutate(month = factor(Month_to_Comptroller))
+
 df_top5 %>% ggplot(aes(x = Month_to_Comptroller, fill = City_Department_Involved))+
   geom_bar()+
-  scale_x_continuous(breaks = seq(1, 12, 1))
+  scale_x_continuous(breaks = seq(1, 12, 1))+
+  labs(title="Lawsuits by Month for the Five Most Frequently Sued Departments",
+       x = "Month",
+       y="Count")
 ```
 
-We can see that the City Wide department was sued a lot during June. We can also see that the Police department tends to have the most lawsuits filed against it in every other month. Water Management/Water sees an uptick in lawsuits during April and May and again in September and October.
+We can see that the city wide department was sued a lot during June. We can also see that the Police department tends to have the most lawsuits filed against it in every other month. Water Management/Water sees an uptick in lawsuits during April and May and again in September and October.
+
+Let's further investigate the lawsuits in the city wide department.
+
+```{r, echo = T}
+df_cw <- df %>% filter(City_Department_Involved == "CITY WIDE")
+
+df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
+  geom_bar()+
+  scale_x_continuous(breaks = seq(1, 12, 1))+
+  labs(title="Lawsuits by Month for the City Wide Department",
+       x = "Month",
+       y="Count")
+```
+
+The bar chart indicates that the city wide department was only sued in May and June. 
+
+```{r, echo = T}
+unique(df_cw$Primary_Cause)
+unique(df_cw$Year_to_Comptroller)
+```
+
+Violations of the Shakman Consent Decree were the primary cause of all of the lawsuits involving the city wide department, and all of these lawsuits were filed in 2008. Per the Encyclopedia of Chicago, the Shakman Consent Decree means that government workers cannot be hired or fired on the basis of their political beliefs or support for a particular politician.
+
+## Did the amount of lawsuits filed against the police department change after 2014?
+
+Starting in 2014, national attention was drawn to the issue of police brutality after the fatal shooting of Michael Brown by a police officer in Ferguson, Missouri. We want to see if there is a corresponding increase in lawsuits against the Chicago police department after 2014.
+
+```{r, echo = T}
+df_cpd <- df %>% filter(City_Department_Involved == "POLICE")
+df_cpd %>% ggplot(aes(x = Year_to_Comptroller))+
+  geom_bar()+
+  scale_x_continuous(breaks = seq(2008, 2019, 1))+
+  labs(title="Lawsuits by Year for Police Department",
+       x = "Year",
+       y="Count")
+```
+
+The bar chart shows a small increase in lawsuits against the Chicago police department in the years 2014, 2015, and 2016 before dropping again in 2017. The year 2018 saw another increase in lawsuits, and there was another decrease in lawsuits in 2019. There does not appear to be a strong relationship between renewed national focus on police brutality and an increase in lawsuits against the Chicago police department.
+
+```{r, echo = T}
+df_cpd_2019 <- df_cpd %>% filter(Year_to_Comptroller==2019)
+tail(df_cpd_2019)
+```
