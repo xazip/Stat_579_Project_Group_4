@@ -1,0 +1,384 @@
+---
+title: "Analysis of Cleaned Data"
+author: "Andrew Maloney and Marie Hardt"
+date: "11/16/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+# Can use this function to quickly install and load all packages
+
+#Load required Packages
+
+
+
+#packages <- c("readxl", "tidyverse", "purrr", "shiny", "shinydashboard",
+             # "shinydashboardPlus", "shinythemes", "stringr", "ggplot2", "plotly", "lubridate",
+              #"viridis", "rayshader")
+
+#for (pkgs in packages){
+# if(!require(pkgs, character.only = TRUE)){ # Condition 
+#  install.packages(pkgs) # Install if not in set 1
+# library(pkgs) # Load if installed
+#}
+#}
+
+
+
+
+
+```
+
+
+```{r, warning=FALSE}
+
+
+library(readxl)
+library(tidyverse)
+library(purrr) #optional
+library(shiny) #optional
+library(shinydashboard) #optional
+library(shinydashboardPlus) #optional
+library(shinythemes) #optional
+library(stringr)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+library(viridis) #optional
+library(rayshader) #optional (Heike hates this package but I love it lol)
+
+library(naniar)
+
+library(tidyr)
+
+```
+
+
+```{r, warning=FALSE}
+
+df <- read_excel("all_lawsuits_2008_to_2019.xlsx")
+
+head(df)
+```
+
+#### Case Number: Identification of the case
+#### Payee: Person or group of people who is/are owed money 
+#### Payment Amount:  Amount paid to the Payee
+#### Fees and Costs: Costs associated with the settlement
+#### Primary Cause: Short insight behind the settlement
+#### City Department Involved: Department of Chicago involved in the settlement
+#### Disposition: Final type of Settlement
+#### Tort: Number of wrongful acts or infringement of rights leading to civil legal liability(big no no)
+#### Date to Comptroller: Date to comptroller ?
+#### Year to Comptroller: Year to Comptroller ?
+#### Monto to Comptroller: Month to Comptroller?
+#### Payment Amount(Millions): Payment amount in terms of millions of dollars
+#### Fees and Costs(Millions): Fees and Costs in terms of millions of dollars
+#### Total Paid: Payment Amount + Fees and Cost
+#### Total Paid(millions): Total Paid in terms of millions of dollars
+
+```{r}
+#Spaces in column names are a no no for me so I am going to replace them with underscores using gsub
+
+names(df) <- gsub(" ", "_", names(df))
+
+```
+
+
+```{r}
+# Let's first investigate the missing values throughtout the data set
+
+
+vis_miss(df)
+
+ df %>%
+  gather(key = "columns", value = "column_values") %>%
+    mutate(missing_values = is.na(column_values)) %>%
+      group_by(columns) %>%
+        mutate(total_values = n()) %>%
+          group_by(columns, missing_values, total_values)%>%
+       summarise(number_of_missing_values = n()) %>%
+        #filter(missing_values == TRUE) %>% select(-missing_values) %>% can see total number of NA values for each column
+          mutate(percent_missing = (number_of_missing_values/total_values) * 100) %>%
+  ggplot(aes(x = reorder(columns, desc(percent_missing)), y = percent_missing, fill = missing_values))+
+    geom_bar(stat = "identity")+
+      coord_flip()+ 
+        ggtitle("Percentage of Missing Values throughout the Dataset")+
+          xlab("Column Names")+ylab("Percentage")+
+            theme_bw() + scale_fill_manual(values = c("Chartreuse3", "firebrick2"))
+
+#ggsave(xx, "missing_values_pic.png")
+
+# 0.48% missing values for Case_Number
+# <0.1% missing values for Payment_Amount
+# <0.1% missing values for Fees_and_Costs
+# <0.1% missing values for Primary_Cause
+# 50.36% missing values for Tort
+# <0.1% missing values for Date_to_Comptroller
+# <0.1% missing values for Year_to_Comptroller
+# <0.1% missing values for Month_to_Comptroller
+# <0.1% missing values for Payment_Amount(millions)
+# <0.1% missing values for Fees_and_Costs(millions)
+# <0.1% missing values for Total_Paid
+# <0.1% missing values for Total_Paid(Millsions)
+# 100 % missing values for Payment_Fund, Effective_Data, Due_Date, and Client_Department
+
+# 3 Columns contain no missing values
+# 16 columns contain missing values, 4 out of those 16 columns are completely missing
+
+```
+
+
+
+```{r}
+# Columns that are 100% missing data are of no use so I am removing them
+
+df <- df %>% select(-Payment_Fund, -Effective_Date, -Due_Date, -Client_Department)
+
+```
+
+## Analysis of remaing missing values
+
+```{r}
+
+#Tort column is easy fix, NA should be 0
+
+df <- df %>%
+  mutate(Tort = ifelse(is.na(Tort) == TRUE, 0, Tort))
+
+
+```
+
+```{r}
+
+df %>%
+  gather(key = "columns", value = "column_values") %>%
+    mutate(missing_values = is.na(column_values)) %>%
+          group_by(columns, missing_values)%>%
+       summarise(number_of_missing_values = n()) %>%
+        filter(missing_values == TRUE) %>% select(-missing_values) 
+
+
+# There are only 79 missing values left.  Do these values have a pattern or are they just missing
+
+df %>% filter(is.na(Case_Number) == TRUE) #Looks like case Numbers are missing on there own (1)
+
+df %>% filter(is.na(Date_to_Comptroller) == TRUE) # Date_to_Comptroller is the joined Year, Month, including day, they each have 2 missing values making a total of 6.  This should be re-separated to include day names could be better as well. (3)
+
+df %>% filter(is.na(Fees_and_Costs) == TRUE) # Fees_and_cost and Fees_and_costs(millions) are linked.  Can remove missing values or take average value based on Primary_Cause (2)
+
+df %>% filter(is.na(Payment_Amount) == TRUE) # Payment_Amount and Payment_Amount(millions) are linked.  The Fees_and_Costs for this observation are really high, could be an entry error.  Need to look at average Payment_Amount and Fees_Costs (2) associated with "UNLAWFUL SEARCH/FALSE ARREST
+
+df %>% filter(is.na(Total_Paid) == TRUE) # One of the observations for the row containing missing Total_Paid has a valid Payment amount. Possible Entry issue. The other one is linked with the really high Fees_and_Costs observation.  Therefore it could be possible that 3 observations are linked across Total_Paid, Payment_Amount, and Fees_and_Costs (2)
+
+df %>% filter(is.na(Primary_Cause) == TRUE) # Missing primary cost deals with Transportation department and has a date.  Probably can look up or remove
+
+```
+
+```{r}
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("ANIM CARE & CONTROL", "ANIMAL C0NTROL", "ANIMAL CARE/CONTROL"), "ANIMAL CONTROL", df$City_Department_Involved) #Animal Services
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("BUS AFFAIRS & LCNSE", "BUS. AFFAIRS/CONS. SERV."), "BUS AFFAIRS", df$City_Department_Involved) # Bus Services
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("DEPT OF AVIATION"), "AVIATION", df$City_Department_Involved) #Aviation
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("CULT AFF & SPEC EVNT"), "CULTURAL AFFAIRS", df$City_Department_Involved) #Cultural Affairs
+
+df$City_Department_Involved <-
+  ifelse(df$City_Department_Involved %in% c("EMER MGMT & COMM", "EMERG COMMUNICATION", "MERG COMMUNICATIO"), "EMERGENCY COMMUNICATION", df$City_Department_Involved)#Emergency communications
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("ENVIRON."), "ENVIRONMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FAM & SUPPORT SRVCS"), "FAMILY & SUPPORT SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FIRE", "FIRE DEPT"), "FIRE DEPARTMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FLEET MGMT"), "FLEET MANAGEMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("GEN. SERV."), "GENERAL SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("HOUSING & ECON DEV"), "HOUSING", df$City_Department_Involved)
+
+df$City_Department_Involved <- 
+  ifelse(df$City_Department_Involved %in% c("WATER MGMT / SEWERS", "WATER MGMT / SEWER", "WATER", "SEWERS", "SEWER", "WATER MGMT / WATER"), "WATER MANAGEMENT", df$City_Department_Involved)
+
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("CDOT"), "TRANSPORTATION", df$City_Department_Involved)
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("HUMAN RESOURCES"), "HUMAN SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC HEALTH", "DISABILITY"), "HEALTH", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC LIBRARY"), "LIBRARY", df$City_Department_Involved)
+
+
+```
+
+
+```{r}
+
+df %>% 
+  group_by(City_Department_Involved) %>%
+    summarise(n = unique(Primary_Cause)) %>% ungroup %>% filter(City_Department_Involved == "POLICE")
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "dodgerblue4")+
+          coord_flip()+ 
+            theme_bw()+
+              theme(axis.text.y = element_text(size = 10, angle = 45))
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+    filter(n <= 10) %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "olivedrab2")+
+          coord_flip()+ 
+            theme_bw()+ 
+              theme(axis.text.y = element_text(size = 7, angle = 45))
+
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+    filter(n > 10 & n < 25) %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "tomato2")+
+          coord_flip()+ 
+            theme_bw()+ 
+              theme(axis.text.y = element_text(size = 7, angle = 45))
+
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+    filter(n >= 25) %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "orange")+
+          coord_flip()+ 
+            theme_bw()+
+              theme(axis.text.y = element_text(size = 7, angle = 45))
+
+
+df %>% group_by(City_Department_Involved, Payment_Amount) %>%
+  summarise(causes = unique(Primary_Cause)) %>% ungroup() %>%
+  group_by(City_Department_Involved, causes) %>% summarise(average_settlement = mean(Payment_Amount))
+
+
+
+x <- df %>% group_by(City_Department_Involved) %>%
+  summarise(causes = length(unique(Primary_Cause)),
+            Average_Settlement = mean(Payment_Amount, na.rm = TRUE) / 1000,
+            Average_Total_Amount = mean(Total_Paid, na.rm = TRUE) / 1000) %>%
+    ungroup() %>% filter(causes >= 25) %>%
+  ggplot(aes(x = City_Department_Involved))+
+    geom_col(aes(y = causes), fill = "black")+ 
+      geom_line(aes(y = Average_Settlement, group = 1), color = "dodgerblue3", size = 1.5)+
+      geom_line(aes(y = Average_Total_Amount, group = 1), color = "red2", size = 1)+
+        #coord_flip()+ 
+          theme_bw()+ 
+          theme(axis.text.x = element_text(size = 7, angle = 45, hjust = 1)) + xlab("Organization") + ylab("Number of Unique Causes")
+
+ggplotly(x)
+
+```
+
+
+
+```{r}
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(Number_of_Instances = length(Primary_Cause),
+            Total_Number_of_Duplicates = sum(duplicated(Primary_Cause)),
+            Number_of_Causes = nrow(table(unique(Primary_Cause))))
+
+
+
+df %>% group_by(City_Department_Involved, Primary_Cause) %>%
+  summarise(Number_of_Instances = length(Primary_Cause),
+            Average_Payout = mean(Payment_Amount, na.rm = TRUE),
+            Average_Fees = mean(Fees_and_Costs, na.rm = TRUE),
+            Average_Payout_with_fees = mean(Total_Paid, na.rm = TRUE))
+
+
+```
+
+## Are there specific times during the year where certain departments are involved in more lawsuits?
+
+```{r, echo = T}
+df2 <- df %>% group_by(City_Department_Involved) %>% summarize(dept_count = n()) %>% arrange(desc(dept_count))
+```
+
+Originally, there were 75 different city departments that had lawsuits filed against them. We combined departments with similar names (e.g. GEN. SERV. was combined with GENERAL SERVICES) to reduce the number of unique departments to 49. Of these combined departments, 5 had more than 1,000 lawsuits filed against them. The 5 departments are the following:
+
+* Police (5049 lawsuits)
+
+* Water Management (2536 lawsuits)
+
+* Transportation (1523 lawsuits)
+
+* City Wide (1428 lawsuits)
+
+* Streets and Sanitation (1419 lawsuits)
+
+We will use a visualization to see if these departments are more likely to be sued at certain times of the year. We will examine the data at the month level.
+
+```{r, echo = T}
+df_top5 <- df %>% filter(City_Department_Involved %in% c("POLICE", "WATER MANAGEMENT", "TRANSPORTATION", "CITY WIDE", "STREETS & SANITATION"))
+df_top5 <- df_top5 %>% mutate(month = factor(Month_to_Comptroller))
+
+df_top5 %>% ggplot(aes(x = Month_to_Comptroller, fill = City_Department_Involved))+
+  geom_bar()+
+  scale_x_continuous(breaks = seq(1, 12, 1))+
+  labs(title="Lawsuits by Month for the Five Most Frequently Sued Departments",
+       x = "Month",
+       y="Count")
+```
+
+We can see that the city wide department was sued a lot during June. We can also see that the Police department tends to have the most lawsuits filed against it in every other month. Water Management sees an uptick in lawsuits during April and May and again in September and October.
+
+Let's further investigate the lawsuits in the City Wide department.
+
+```{r, echo = T}
+df_cw <- df %>% filter(City_Department_Involved == "CITY WIDE")
+
+df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
+  geom_bar()+
+  scale_x_continuous(breaks = seq(1, 12, 1))+
+  labs(title="Lawsuits by Month for the City Wide Department",
+       x = "Month",
+       y="Count")
+```
+
+The bar chart indicates that the city wide department was only sued in May and June. 
+
+```{r, echo = T}
+unique(df_cw$Primary_Cause)
+unique(df_cw$Year_to_Comptroller)
+```
+
+Violations of the Shakman Consent Decree were the primary cause of all of the lawsuits involving the city wide department, and all of these lawsuits were filed in 2008. Per the Encyclopedia of Chicago, the Shakman Consent Decree means that government workers cannot be hired or fired on the basis of their political beliefs or support for a particular politician.
+
+## Did the amount of lawsuits filed against the police department change after 2014?
+
+Starting in 2014, national attention was drawn to the issue of police brutality after the fatal shooting of Michael Brown by a police officer in Ferguson, Missouri. We want to see if there is a corresponding increase in lawsuits against the Chicago police department after 2014.
+
+```{r, echo = T}
+df_cpd <- df %>% filter(City_Department_Involved == "POLICE")
+df_cpd %>% ggplot(aes(x = Year_to_Comptroller))+
+  geom_bar()+
+  scale_x_continuous(breaks = seq(2008, 2019, 1))+
+  labs(title="Lawsuits by Year for Police Department",
+       x = "Year",
+       y="Count")
+```
+
+The bar chart shows a small increase in lawsuits against the Chicago police department in the years 2014, 2015, and 2016 before dropping again in 2017. The year 2018 saw another increase in lawsuits, and there was another decrease in lawsuits in 2019. There does not appear to be a strong relationship between renewed national focus on police brutality and an increase in lawsuits against the Chicago police department.
+
+```{r, echo = T}
+df_cpd_2019 <- df_cpd %>% filter(Year_to_Comptroller==2019)
+tail(df_cpd_2019)
+```
