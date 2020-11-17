@@ -409,6 +409,58 @@ df %>% group_by(City_Department_Involved, Primary_Cause) %>%
 
 ```
 
+Some quick graphs with the new columns made from `Case_Number`:
+```{r}
+df1 %>%
+  filter(Administrative) %>%
+  ggplot(aes(x = Total_Paid)) + 
+  geom_histogram(binwidth = 500)
+
+# Some of the claims are negative, which is interesting.
+# Why would people pay the city?
+
+df1 %>%
+  filter(Administrative, Total_Paid < 0) %>%
+  arrange(Total_Paid)
+# Hard to find online records of these
+# People's Gas is a utilities company, so it would be believable that they could've
+# damaged something while installing something and had to pay the City money
+
+# noticed that many of the negative values have duplicate positive values
+# check if all negative values are duplicates
+df1 %>%
+  filter(Administrative, Total_Paid < 0) %>%
+  arrange(Year_to_Comptroller)
+
+df1 %>%
+  filter(!is.na(Court)) %>%
+  ggplot(aes(x = Court, y = log10(Total_Paid))) + 
+  geom_boxplot()
+# not sure how to graph this
+# maybe investigate "large" values separately?
+
+# Choose certain depts, choose primary cause(?)
+df1 %>%
+  mutate(
+    Length = Year_to_Comptroller - Year_Filed
+  ) %>%
+  ggplot(aes(y = Length)) +
+  geom_boxplot()
+
+df1 %>%
+  group_by(Court) %>%
+  summarize(n = n())
+
+df1 %>%
+  filter(!is.na(Court), Total_Paid < quantile(Total_Paid, probs = .9, na.rm=TRUE),
+         Total_Paid > 0) %>%
+  ggplot(aes(x = Total_Paid)) +
+  geom_histogram() +
+  facet_wrap(~Court)
+# peaks at "round" numbers (e.g. $20k, $30k, etc.)
+head(df1)
+```
+
 
 
 Is there an association between the amount paid in the lawsuit and the city department?
