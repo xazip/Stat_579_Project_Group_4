@@ -332,23 +332,31 @@ df_top5 <- df_top5 %>% mutate(month = factor(Month_to_Comptroller))
 
 df_top5 %>% ggplot(aes(x = Month_to_Comptroller, fill = City_Department_Involved))+
   geom_bar()+
-  scale_x_continuous(breaks = seq(1, 12, 1))+
+  scale_x_continuous(breaks = seq(1, 12, 1), labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))+
   labs(title="Lawsuits by Month for the Five Most Frequently Sued Departments",
        x = "Month",
-       y="Count")
+       y="Count")#+
+    #facet_wrap(~Year_to_Comptroller)
 ```
 
 We can see that the city wide department was sued a lot during June. We can also see that the Police department tends to have the most lawsuits filed against it in every other month. Water Management sees an uptick in lawsuits during April and May and again in September and October.
 
-Let's further investigate the lawsuits in the City Wide department.
+Let's further investigate the city-wide lawsuits.
 
 ```{r, echo = T}
 df_cw <- df %>% filter(City_Department_Involved == "CITY WIDE")
 
+#df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
+  #geom_bar()+
+  #cale_x_continuous(breaks = seq(1, 12, 1), labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))+
+  #labs(title="Lawsuits by Month for the City Wide Department",
+       #x = "Month",
+       #y="Count")
+
 df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
   geom_bar()+
-  scale_x_continuous(breaks = seq(1, 12, 1))+
-  labs(title="Lawsuits by Month for the City Wide Department",
+  scale_x_continuous(breaks = seq(1, 12, 1), labels = c("", "", "", "", "May 28, 2008", "June 10, 2008", "", "", "", "", "", "" ))+
+  labs(title="City-Wide Lawsuits by Date",
        x = "Month",
        y="Count")
 ```
@@ -386,7 +394,14 @@ A judge ordered that \$3,600,000 should be paid for attorneys' fees and \$84,150
 sum(df_cw$Fees_and_Costs)
 ```
 
-Roger Fross, a lawyer, was awarded \$3,670,092, so we have evidence that the City of Chicago did pay for attorneys' fees and costs for this litigation. Interestingly, the fees and costs for attorneys' fees went to the comptroller in May 2008 and the payments for the other payees went to the comptroller in June 2008.
+Roger Fross, a lawyer, was awarded \$3,670,092 in fees and costs, so we have evidence that the City of Chicago did pay for attorneys' fees and costs for this litigation. Interestingly, the fees and costs for attorneys' fees went to the comptroller in May 2008 and the payments for the other payees went to the comptroller in June 2008.
+
+```{r, echo=T}
+df_cw %>% ggplot(aes(x=Payment_Amount))+
+  geom_histogram(binwidth = 1000)+
+  labs(title="Amounts Paid in Shakman Consent Decree Violation Lawsuits in 2008",
+       x="Payment Amount (US$)")
+```
 
 ## Did the amount of lawsuits filed against the police department change after 2014?
 
@@ -394,7 +409,7 @@ Starting in 2014, national attention was drawn to the issue of police brutality 
 
 ```{r, echo = T}
 df_cpd <- df %>% filter(City_Department_Involved == "POLICE")
-df_cpd %>% ggplot(aes150.40(x = Year_to_Comptroller))+
+df_cpd %>% ggplot(aes(x = Year_to_Comptroller))+
   geom_bar()+
   scale_x_continuous(breaks = seq(2008, 2019, 1))+
   labs(title="Lawsuits by Year for Police Department",
