@@ -1,0 +1,26 @@
+---
+title: "City of Chicago Lawsuits"
+subtitle: |
+  | Abraham Adokwei, Robert Castaneda, Valerie Han,    
+  | Marie Hardt, and Andrew Maloney  
+date: "November 2020"
+output: pdf_document
+documentclass: report
+pagenumber: T
+margin: 1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Introduction
+
+We can write our final report in this document. The document class is set to report so we can easily have a cover page if we want.
+
+```{r, echo = F}
+#df <- read.csv("all_lawsuits_2008_to_2019.xlsx")
+```
+
+## Conclusion
