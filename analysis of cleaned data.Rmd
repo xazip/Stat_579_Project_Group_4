@@ -353,14 +353,40 @@ df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
        y="Count")
 ```
 
-The bar chart indicates that the city wide department was only sued in May and June. 
+The bar chart indicates that the City Wide department was only sued in May and June. 
 
 ```{r, echo = T}
 unique(df_cw$Primary_Cause)
 unique(df_cw$Year_to_Comptroller)
 ```
 
-Violations of the Shakman Consent Decree were the primary cause of all of the lawsuits involving the city wide department, and all of these lawsuits were filed in 2008. Per the Encyclopedia of Chicago, the Shakman Consent Decree means that government workers cannot be hired or fired on the basis of their political beliefs or support for a particular politician.
+Violations of the Shakman Consent Decree were the primary cause of all of the lawsuits involving the City Wide department, and all of these lawsuits went to the comptroller in 2008. Per the Encyclopedia of Chicago, the Shakman Consent Decree means that government workers cannot be hired or fired on the basis of their political beliefs or support for a particular politician or political party. Litigation about the Shakman consent decrees has been ongoing since 1969, when Michael Shakman and Paul M. Lurie filed a lawsuit on behalf of themselves and others who claimed that the City of Chicago made support of the Cook County Regular Democratic Organization a condition of employment with the city, which was a violation of the plaintiffs' constitutional rights.
+https://casetext.com/case/shakman-v-city-of-chicago-2
+
+Let's see if violations of the Shakman Consent Decree come up as primary causes in any other lawsuits.
+
+```{r, echo = T}
+df_scd <- df %>% filter(Primary_Cause == "VIOLATIONS OF SHAKMAN CONSENT DECREE")
+all.equal(df_scd, df_cw)
+```
+
+No, violations of the Shakman consent decree were not the primary causes of any lawsuits other than those filed against the City.
+
+In 2008, the City of Chicago agreed to pay a \$12 million settlement for violations of the Shakman consent decree. Is the total payment amount to the payees around \$12 million?
+
+```{r, echo = T}
+df_cw %>% summarize(paid = sum(Payment_Amount))
+```
+
+Yes, the amount paid by the City of Chicago to the payees is almost \$12 million. 
+
+A judge ordered that \$3,600,000 should be paid for attorneys' fees and \$84,150.40 of attorneys' costs were to be reimbursed. Does the dataset show this?
+
+```{r echo = T}
+sum(df_cw$Fees_and_Costs)
+```
+
+Roger Fross, a lawyer, was awarded \$3,670,092, so we have evidence that the City of Chicago did pay for attorneys' fees and costs for this litigation. Interestingly, the fees and costs for attorneys' fees went to the comptroller in May 2008 and the payments for the other payees went to the comptroller in June 2008.
 
 ## Did the amount of lawsuits filed against the police department change after 2014?
 
@@ -368,7 +394,7 @@ Starting in 2014, national attention was drawn to the issue of police brutality 
 
 ```{r, echo = T}
 df_cpd <- df %>% filter(City_Department_Involved == "POLICE")
-df_cpd %>% ggplot(aes(x = Year_to_Comptroller))+
+df_cpd %>% ggplot(aes150.40(x = Year_to_Comptroller))+
   geom_bar()+
   scale_x_continuous(breaks = seq(2008, 2019, 1))+
   labs(title="Lawsuits by Year for Police Department",
