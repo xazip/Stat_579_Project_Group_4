@@ -2,7 +2,9 @@
 title: "Untitled"
 author: "Everyone"
 date: "10/15/2020"
-output: html_document
+output:
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -40,7 +42,7 @@ library(ggplot2)
 library(plotly)
 library(lubridate)
 library(viridis) #optional
-library(rayshader) #optional (Heike hates this package but I love it lol)
+#library(rayshader) #optional (Heike hates this package but I love it lol)
 library(naniar)
 library(tidyr)
 ```
@@ -172,10 +174,18 @@ large_dept %>%
   coord_flip() +
   xlab("City Department") +
   ylab("Amount City Paid in Lawsuit")
+
+large_dept %>%
+  ggplot(aes(x = reorder(City_Department_Involved, Total_Paid, FUN = median, na.rm=TRUE), 
+             y = Total_Paid)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("City Department") +
+  ylab("Amount City Paid in Lawsuit")
 # NOTE THAT WE SHOULD COMBINE SOME OF THESE DEPARMENTS
 # E.G. WATER, FIRE
 ```
-The median ranges from around $1000 to somewhere in the tens of thousands of dollars. The fire department has the highest median payout, followed by the police department, and then law department. Interestingly, almost all of the departments have large ranges in the 
+The median ranges from around $1000 to somewhere in the tens of thousands of dollars. The fire department has the highest median payout, followed by the police department, and then law department. Interestingly, almost all of the departments have large ranges in the payment amounts.
 
 
 Does the police department settle less over time? (The City changed its legal strategy in 2009 or 2010, settling less and litigating more.)
@@ -207,4 +217,4 @@ large_dept %>%
 
 "Consultant" disposition seems to be for small matters, so we exclude that here.
 
-While the number of settlements drops sharply in 2009 and remains much lower than 2008 levels in general, the police department's settlement levels behave differently. They too drop sharply in 2009, but they rise again in 2011-2016 before dropping again. This suggests that the City may have changed its litigation policy in general. The increase in settlements in the police deparmtent may be due to an increase in serious offences by the police or due to a change in litigation policy specific to the police department.
+While the number of settlements drops sharply in 2009 and remains much lower than 2008 levels in general, the police department's settlement levels behave differently. They too drop sharply in 2009, but they rise again in 2011-2016 before dropping again. This suggests that the City may have changed its litigation policy in general. The increase in settlements in the police department may be due to an increase in serious offences by the police or due to a change in litigation policy specific to the police department.
