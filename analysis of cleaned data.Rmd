@@ -397,10 +397,16 @@ sum(df_cw$Fees_and_Costs)
 Roger Fross, a lawyer, was awarded \$3,670,092 in fees and costs, so we have evidence that the City of Chicago did pay for attorneys' fees and costs for this litigation. Interestingly, the fees and costs for attorneys' fees went to the comptroller in May 2008 and the payments for the other payees went to the comptroller in June 2008.
 
 ```{r, echo=T}
-df_cw %>% ggplot(aes(x=Payment_Amount))+
+df_cw_payees <- df_cw[-c(1:2),]
+df_cw_payees %>% ggplot(aes(x=Payment_Amount))+
   geom_histogram(binwidth = 1000)+
-  labs(title="Amounts Paid in Shakman Consent Decree Violation Lawsuits in 2008",
-       x="Payment Amount (US$)")
+  labs(title="Amounts Paid to Plaintiffs in Shakman Consent Decree Violation Lawsuits in 2008",
+       x="Payment Amount (US$)")+
+  theme_bw()
+```
+```{r, echo = T}
+df_cw_payees %>% group_by(Payment_Amount) %>% summarize(count = n())
+
 ```
 
 ## Did the amount of lawsuits filed against the police department change after 2014?
