@@ -64,7 +64,7 @@ library(tidyr)
 
 df <- read_excel("all_lawsuits_2008_to_2019.xlsx")
 
-df$Date_to_Comptroller <- as_date(df$Date_to_Comptroller)
+#df$Date_to_Comptroller <- as_date(df$Date_to_Comptroller)
 
 head(df)
 ```
@@ -212,10 +212,105 @@ df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("CDOT")
 df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("HUMAN RESOURCES"), "HUMAN SERVICES", df$City_Department_Involved)
 df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC HEALTH", "DISABILITY"), "HEALTH", df$City_Department_Involved)
 df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC LIBRARY"), "LIBRARY", df$City_Department_Involved)
-
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("S&S"), "STREETS & SANITATION", df$City_Department_Involved)
 
 ```
 
+```{r}
+
+
+
+
+#Can also clean primary causes
+
+df %>% filter(City_Department_Involved == "POLICE") %>% {print(unique(.$Primary_Cause))}
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "2FM" & df$Primary_Cause %in% c("MVA - CITY VEHICLE",
+                                                                        "MVA / CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
+#-------------------------------------------------------------------------------------------------------------------------------------------#
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "ANIMAL CONTROL" & df$Primary_Cause %in% c("PROPERTY DAMAGE - OTHER", "PDOTH"), "PROPERTY DAMAGE/OTHER", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "ANIMAL CONTROL" & df$Primary_Cause %in% c("PIOTH"), "PERSONAL INJURY/OTHER", df$Primary_Cause)
+
+#-------------------------------------------------------------------------------------------------------------------------------------------#
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "BUILDINGS" & df$Primary_Cause %in% c("DAMAGE TO PROPERTY DURING OPERATIONS"), "PROPERTY DAMAGED DURING OPERATIONS", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "BUILDINGS" & df$Primary_Cause %in% c("PROPERTY DAMAGE - OTHER"), "PROPERTY DAMAGE/OTHER", df$Primary_Cause)
+
+#----------------------------------------------------------------------------------------------------------------------------------------------#
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "EMERGENCY COMMUNICATION" & df$Primary_Cause %in% c("MVA - CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------#
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FINANCE" & df$Primary_Cause %in% c("PROPERTY DAMAGE - OTHER", "PDOTH"), "PROPERTY DAMAGE/OTHER", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FINANCE" & df$Primary_Cause %in% c("PDMVA", "MVA - PROPERTY DAMAGE ONLY"), "PROPERTY DAMAGE/MVA", df$Primary_Cause)
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------#
+
+# Fire Continued............
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FIRE DEPARTMENT" & df$Primary_Cause %in% c("MVA - CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FIRE DEPARTMENT" & df$Primary_Cause %in% c("MVA - PROPERTY DAMAGE ONLY", "PDMVA", "MVA/PROPERTY DAMAGE"), "PROPERTY DAMAGE/MVA", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FIRE DEPARTMENT" & df$Primary_Cause %in% c("PDOTH", "PROPERTY DAMAGE - OTHER"), "PROPERTY DAMAGE/OTHER", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FIRE DEPARTMENT" & df$Primary_Cause %in% c("CITY FIRE FIGHTERS REV DISCRIM FROM 1986 LT EXAM"), "FIRE FIGHTERS CLAIM REVERSE DISCRIMINATION ON 1986 LT'S EXAM", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FIRE DEPARTMENT" & df$Primary_Cause %in% c("TITLE VII DISPARATGE IMPACT", "TITLE VII/DISPARATE IMPACT"), "TITLE Vll DISPARATE IMPACT", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "FIRE DEPARTMENT" & df$Primary_Cause %in% c("RACE DISCRIMINATION, DISPARATE IMPACT", "RACE DISCRIMINATION", "RACE DISCRIMINATION DISPARATE IMPACT"), "RACIAL DISCRIMINATION", df$Primary_Cause)
+
+
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "GENERAL SERVICES" & df$Primary_Cause %in% c("PERSONAL INJURY - OTHER"), "PERSONAL INJURY OTHER", df$Primary_Cause)
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
+#Law Continued....................................................
+
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "LEET MANAGEMEN" & df$Primary_Cause %in% c("MVA - PROPERTY DAMAGE ONLY"), "PROPERTY DAMAGE/MVA", df$Primary_Cause)
+
+#---------------------------------------------------------------#
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "LIBRARY" & df$Primary_Cause %in% c("MVA / CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
+
+#-----------------------------------------------------------------------------------------------------------------------------------#
+
+
+
+
+#Still alot of cleaning
+
+```
 
 ```{r}
 
@@ -292,19 +387,7 @@ ggplotly(x)
 ```
 
 
-```{r}
 
-#Can also clean primary causes
-
-df %>% filter(City_Department_Involved == "ANIMAL CONTROL") %>% {print(unique(.$Primary_Cause))}
-
-df$Primary_Cause <- 
-  ifelse(df$City_Department_Involved == "2FM" & df$Primary_Cause %in% c("MVA - CITY VEHICLE",
-                                                                        "MVA / CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
-
-
-
-```
 
 
 ```{r}
@@ -336,5 +419,8 @@ xxx <- df %>%
       
 ggplotly(xxx)
 ```
+
+
+
 
 
