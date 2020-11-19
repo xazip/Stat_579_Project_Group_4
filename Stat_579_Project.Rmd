@@ -304,9 +304,9 @@ df$Primary_Cause <-
   ifelse(df$City_Department_Involved == "LIBRARY" & df$Primary_Cause %in% c("MVA / CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
 
 #-----------------------------------------------------------------------------------------------------------------------------------#
-df %>% filter(City_Department_Involved == "STREETS & SANITATION") %>% {print(unique(.$Primary_Cause))}
+#df %>% filter(City_Department_Involved == "POLICE") %>% {print(unique(.$Primary_Cause))}
 
-df %>% filter(City_Department_Involved == "POLICE" & str_detect(Primary_Cause, "CIVIL")) %>% {print(unique(.$Primary_Cause))}
+#df %>% filter(City_Department_Involved == "POLICE" & str_detect(Primary_Cause, "DEATH")) %>% {print(unique(.$Primary_Cause))}
 
 
 df$Primary_Cause <- 
@@ -397,115 +397,49 @@ df$Primary_Cause <-
                                                                            "FOIA ACTION",
                                                                            "FOIA VIOLATION"), "FOIA", df$Primary_Cause)
 
-```
 
-```{r}
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("CL VEH HIT CPD VEH FRONT END DMG CL VEH BOKUNIEWICZ JOSEPH",
+                                                                           "CPD VEH REARENDED CL VEH UNDISCLOSED INJURIES FLAHERTY KENNETH W",
+                                                                           "CPD RESCUE-CL BOAT DMGD GASH IN CL BOAT/DMG ANCHR",
+                                                                           "CPD V HIT CL VEH LEFT SIDE DAMAGE CL VEH",
+                                                                           "CPD VEH HIT CL VEH UNSPECIFIED VEH DAMAGE MENDEZ JEANNE R",
+                                                                           "CPD PURSUIT 3 BROKEN WINDOWS",
+                                                                           "CPD V BACKED INTO CL VEH FRONT RIGHT DAMAGE CL VEH SCHNEIDER KATHY",
+                                                                           "CPD HIT CL VEH IN REAR REAR END DAMAGE CL VEH TIRADO GLORIA",
+                                                                           "CPD V HIT CL PARKED VEH LEFT SIDE DAMAGE CL VEH HIGGS MARIA",
+                                                                           "CPD V HIT CL PARKED VEH LEFT SIDE DAMAGE CL VEH HIGGS MARIA",
+                                                                           "CPD B/INTO CL PARKED VEH MINOR SCRATCHES FRONT END UNKN UNKN"), "UNKNOWN/VEHICLE/POLICE/RELATED", df$Primary_Cause)
 
-
-
-
-df %>% 
-  group_by(City_Department_Involved) %>%
-    summarise(n = unique(Primary_Cause)) %>% ungroup %>% filter(City_Department_Involved == "POLICE")
-
-
-df %>% group_by(City_Department_Involved) %>%
-  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
-      ggplot(aes(x = City_Department_Involved, y = n))+
-        geom_bar(stat = "identity", fill = "dodgerblue4")+
-          coord_flip()+ 
-            theme_bw()+
-              theme(axis.text.y = element_text(size = 10, angle = 45))
-
-
-df %>% group_by(City_Department_Involved) %>%
-  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
-    filter(n <= 10) %>%
-      ggplot(aes(x = City_Department_Involved, y = n))+
-        geom_bar(stat = "identity", fill = "olivedrab2")+
-          coord_flip()+ 
-            theme_bw()+ 
-              theme(axis.text.y = element_text(size = 7, angle = 45))
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("PERSONAL INJURY - OTHER", "PIOTH"), "PERSONAL INJURY/OTHER", df$Primary_Cause)
 
 
 
-df %>% group_by(City_Department_Involved) %>%
-  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
-    filter(n > 10 & n < 25) %>%
-      ggplot(aes(x = City_Department_Involved, y = n))+
-        geom_bar(stat = "identity", fill = "tomato2")+
-          coord_flip()+ 
-            theme_bw()+ 
-              theme(axis.text.y = element_text(size = 7, angle = 45))
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE/SERIOUS",
+                                                                           "EXCESSIVE FORCE MINOR",
+                                                                           "EXCESSIVE FORCE/MALICIOUS PROSECUTION",
+                                                                           "EXCESSIVE FORCE/FAILURE TO PROTECT",
+                                                                           "EXCESSIVE FORCE/ELBOW STRIKE",
+                                                                           "EXCESSIVE DETENITION/MALICIOUS PROSECUTION",
+                                                                           "EXCESSIVE FORCE/MINOR",
+                                                                           "EXCESSIVE FORCE - SERIOUS",
+                                                                           "EXCESSIVE FORCE/FALSE ARREST/EMOTIONAL",
+                                                                           "EXCESSIVE FORCE/TASER",
+                                                                           "EXCESSIVE FORCE/ILLEGAL SEARCH",
+                                                                           "EXCESSIVE FORCE/ILLEGAL SEIZURE",
+                                                                           "EXCESSIVE FORCE SERIOUS",
+                                                                           "EXCESSIVE FORCE/FAILURE TO INTERVENE",
+                                                                           "EXCESSIVE FORCE/DENIAL OF MEDICAL CARE",
+                                                                           "EXCESSIVE FORCE/SERIOUS/BURGE REPARATIONS"), "EXCESSIVE FORCE", df$Primary_Cause)
 
-
-
-df %>% group_by(City_Department_Involved) %>%
-  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
-    filter(n >= 25) %>%
-      ggplot(aes(x = City_Department_Involved, y = n))+
-        geom_bar(stat = "identity", fill = "orange")+
-          coord_flip()+ 
-            theme_bw()+
-              theme(axis.text.y = element_text(size = 7, angle = 45))
-
-
-df %>% group_by(City_Department_Involved, Payment_Amount) %>%
-  summarise(causes = unique(Primary_Cause)) %>% ungroup() %>%
-  group_by(City_Department_Involved, causes) %>% summarise(average_settlement = mean(Payment_Amount))
-
-
-
-x <- df %>% group_by(City_Department_Involved) %>%
-  summarise(causes = length(unique(Primary_Cause)),
-            Average_Settlement = mean(Payment_Amount, na.rm = TRUE) / 1000,
-            Average_Total_Amount = mean(Total_Paid, na.rm = TRUE) / 1000) %>%
-    ungroup() %>% filter(causes >= 25) %>%
-  ggplot(aes(x = City_Department_Involved))+
-    geom_col(aes(y = causes), fill = "black")+ 
-      geom_line(aes(y = Average_Settlement, group = 1), color = "dodgerblue3", size = 1.5)+
-      geom_line(aes(y = Average_Total_Amount, group = 1), color = "red2", size = 1)+
-        #coord_flip()+ 
-          theme_bw()+ 
-          theme(axis.text.x = element_text(size = 7, angle = 45, hjust = 1)) + xlab("Organization") + ylab("Number of Unique Causes")
-
-ggplotly(x)
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE/WRONGFUL DEATH"), "WRONGFUL DEATH", df$Primary_Cause)
 
 ```
 
 
-
-
-
-```{r}
-
-df %>% group_by(City_Department_Involved) %>%
-  summarise(Number_of_Instances = length(Primary_Cause),
-            Total_Number_of_Duplicates = sum(duplicated(Primary_Cause)),
-            Number_of_Causes = nrow(table(unique(Primary_Cause))))
-
-
-
-df %>% group_by(City_Department_Involved, Primary_Cause) %>%
-  summarise(Number_of_Instances = length(Primary_Cause),
-            Average_Payout = mean(Payment_Amount, na.rm = TRUE),
-            Average_Fees = mean(Fees_and_Costs, na.rm = TRUE),
-            Average_Payout_with_fees = mean(Total_Paid, na.rm = TRUE))
-
-           
-
-xxx <- df %>% 
-  filter(City_Department_Involved == "POLICE") %>%
-    group_by(City_Department_Involved, Primary_Cause, Date_to_Comptroller) %>%
-       summarise(Number_of_Instances = length(Primary_Cause),
-            Average_Payout = mean(Payment_Amount, na.rm = TRUE),
-            Average_Fees = mean(Fees_and_Costs, na.rm = TRUE),
-            Average_Payout_with_fees = mean(Total_Paid, na.rm = TRUE)) %>% filter(Number_of_Instances > 5) %>%
-  ggplot(aes(x = Date_to_Comptroller, y = Average_Payout_with_fees, color = Primary_Cause))+
-    geom_point() + theme_bw() + theme(legend.position = "none")
-      
-ggplotly(xxx)
-```
 
 
 
