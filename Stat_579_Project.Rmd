@@ -304,9 +304,9 @@ df$Primary_Cause <-
   ifelse(df$City_Department_Involved == "LIBRARY" & df$Primary_Cause %in% c("MVA / CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
 
 #-----------------------------------------------------------------------------------------------------------------------------------#
-#df %>% filter(City_Department_Involved == "POLICE") %>% {print(unique(.$Primary_Cause))}
+df %>% filter(City_Department_Involved == "POLICE") %>% {print(unique(.$Primary_Cause))}
 
-#df %>% filter(City_Department_Involved == "POLICE" & str_detect(Primary_Cause, "DEATH")) %>% {print(unique(.$Primary_Cause))}
+df %>% filter(City_Department_Involved == "POLICE" & str_detect(Primary_Cause, "FALSE")) %>% {print(unique(.$Primary_Cause))}
 
 
 df$Primary_Cause <- 
@@ -409,7 +409,8 @@ df$Primary_Cause <-
                                                                            "CPD HIT CL VEH IN REAR REAR END DAMAGE CL VEH TIRADO GLORIA",
                                                                            "CPD V HIT CL PARKED VEH LEFT SIDE DAMAGE CL VEH HIGGS MARIA",
                                                                            "CPD V HIT CL PARKED VEH LEFT SIDE DAMAGE CL VEH HIGGS MARIA",
-                                                                           "CPD B/INTO CL PARKED VEH MINOR SCRATCHES FRONT END UNKN UNKN"), "UNKNOWN/VEHICLE/POLICE/RELATED", df$Primary_Cause)
+                                                                           "CPD B/INTO CL PARKED VEH MINOR SCRATCHES FRONT END UNKN UNKN",
+                                                                           "CPD PUSH V INTO CL VEH LEFT SIDE DAMAGE CL VEH SCHOESSLING JOHN"), "UNKNOWN/VEHICLE/POLICE/RELATED", df$Primary_Cause)
 
 df$Primary_Cause <- 
   ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("PERSONAL INJURY - OTHER", "PIOTH"), "PERSONAL INJURY/OTHER", df$Primary_Cause)
@@ -437,6 +438,30 @@ df$Primary_Cause <-
 df$Primary_Cause <- 
   ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE/WRONGFUL DEATH"), "WRONGFUL DEATH", df$Primary_Cause)
 
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("PROPERTY DAMAGED DURING OPERATIONS"), "DAMAGE TO PROPERTY DURING OPERATIONS", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("PROPERTY DAMAGE - OTHER", "PDOTH"), "PROPERTY DAMAGE/OTHER", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("UNREASONABLE SEIZURE & PROPERTY"), "ILLEGAL SEIZURE OF PROPERTY", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("MALICIOUS PROSECUTION/EXTENDED DETENTION"), "EXTENDED DETENTION/MALICIOUS PROSECUTION", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("VIOLATIONS OF CONSTIT. RIGHTS"), "VIOLATIONS OF CONSTITUTIONAL RIGHTS", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("CLAIM OF VIOLATION OF FIRST AMENDMENT RIGHTS"), "VIOLATED FIRST AMENDMENT RIGHTS", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("FALSE ARREST/EXCESSIVE FORCE",
+                                                                           "FALSE ARREST/EXTENDED DETENTION",
+                                                                           "FALSE ARREST/MALICIOUS PROSECUTION",
+                                                                           "FALSE ARREST/CONSPIRACY"), "FALSE ARREST", df$Primary_Cause)
 ```
 
 
