@@ -391,6 +391,7 @@ Yes, the amount paid by the City of Chicago to the payees is almost \$12 million
 A judge ordered that \$3,600,000 should be paid for attorneys' fees and \$84,150.40 of attorneys' costs were to be reimbursed. Does the dataset show this?
 
 ```{r echo = T}
+sum(df_cw$Payment_Amount)
 sum(df_cw$Fees_and_Costs)
 ```
 
@@ -400,14 +401,37 @@ Roger Fross, a lawyer, was awarded \$3,670,092 in fees and costs, so we have evi
 df_cw_payees <- df_cw[-c(1:2),]
 df_cw_payees %>% ggplot(aes(x=Payment_Amount))+
   geom_histogram(binwidth = 1000)+
-  labs(title="Amounts Paid to Plaintiffs in Shakman Consent Decree Violation Lawsuits in 2008",
-       x="Payment Amount (US$)")+
-  theme_bw()
+  labs(title="Payments for Shakman Consent Decree Violation Lawsuits in 2008",
+       x="Payment Amount (US$)",
+       y="Number of Payees")
 ```
 ```{r, echo = T}
 df_cw_payees %>% group_by(Payment_Amount) %>% summarize(count = n())
-
 ```
+```{r, echo =T}
+payments <- data.frame(payment_amount = c(12000000, 3600000+84150.40, 11848340, 3670092), payment_type = c("City Settlement", "Ordered Attorney Fees & Costs", "Total Payment to Payees", "Total Attorney Fees & Costs"))
+payments$payment_type <- factor(payments$payment_type, levels=c("Ordered Attorney Fees & Costs", "Total Attorney Fees & Costs", "City Settlement", "Total Payment to Payees"))
+
+payments %>% group_by(payment_type) %>% 
+  ggplot(aes(x=payment_type, y = payment_amount)) +
+  geom_col()+
+  theme(legend.position = "none")+
+  theme(axis.text.x=element_text(angle=10, hjust = 1))
+
+payments2 <- data.frame(payment_amount = c(12000000, 3600000+84150.40, 11848340, 3670092), payment_status = c("Ordered", "Ordered", "Dataset", "Dataset"), payment_type=c("Payment to Plaintiffs", "Attorney Fees & Costs", "Payment to Plaintiffs", "Attorney Fees & Costs"))
+payments2$payment_status <- factor(payments2$payment_status, levels = c("Ordered", "Dataset"))
+payments2$payment_status <- factor(payments2$payment_status)
+
+payments2 %>% ggplot(aes(x=payment_status, y=payment_amount, fill = payment_status))+
+  geom_col()+
+  facet_wrap(~payment_type)+
+  scale_fill_grey(start = 0.5, end = 0.25)+
+  labs(title="Comparison of Ordered Payments to Payments in Dataset",
+       x = "Payment Type",
+       y = "Payment Amount (US$)")+
+  theme(legend.position = "none")
+```
+
 
 ## Did the amount of lawsuits filed against the police department change after 2014?
 
