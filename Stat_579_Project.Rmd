@@ -304,11 +304,98 @@ df$Primary_Cause <-
   ifelse(df$City_Department_Involved == "LIBRARY" & df$Primary_Cause %in% c("MVA / CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
 
 #-----------------------------------------------------------------------------------------------------------------------------------#
+df %>% filter(City_Department_Involved == "STREETS & SANITATION") %>% {print(unique(.$Primary_Cause))}
+
+df %>% filter(City_Department_Involved == "POLICE" & str_detect(Primary_Cause, "CIVIL")) %>% {print(unique(.$Primary_Cause))}
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("TITLE VII CIVIL RIGHTS ACT OF 1964",
+                                                                            "TITLE VII AND CIVIL RIGHTS ACT",
+                                                                            "VIOLATION OF TITLE VII"), "TITLE VII", df$Primary_Cause)
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("TITLE VII NATIONAL ORIGIN",
+                                                                           "TITILE VII - NATIONAL ORIGIN"), "TITLE VII/NATIONAL ORIGIN", df$Primary_Cause)
 
 
 
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("MVA / CITY VEHICLE",
+                                                                           "MVA/CITY VEHICLE IN PUBLIC WAY",
+                                                                           "MVA - CITY VEHICLE",
+                                                                           "VEHICLE COLLISION - CITY VEHICLE",
+                                                                           "VEHICLE COLLISIONS - CITY VEHICLE"), "MVA/CITY VEHICLE", df$Primary_Cause)
 
-#Still alot of cleaning
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("MVA - PROPERTY DAMAGE",
+                                                                           "MVA/PROPERTY DAMAGE",
+                                                                           "MVA -PROPERTY DAMAGE ONLY",
+                                                                           "MVA - PROPERTY DAMAGE ONLY",
+                                                                           "MVA - PROPERTY DAMAGE BIKE"), "PROPERTY DAMAGE/MVA", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("MVA - PEDESTRIAN",
+                                                                           "MOTOR VEHICLE/ACCIDENT PEDESTRIAN"), "MVA/PEDESTRIAN", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("MVA/ER - POLICE",
+                                                                           "MVA/ER-POLICE",
+                                                                           "MVA - EMERGENCY RESPONSE",
+                                                                           "POLICE/EMERGENCY RESPONSE"), "MVA/EMERGENCY/POLICE", df$Primary_Cause)
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("MVA - ER"), "MVA/ER-MEDICAL", df$Primary_Cause)
+
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("TITLE V11 - RACE DISCRIMINATION", "TITLE VII DISCRIMINATION", "RACE DISCRIMINATION"), "TITLE VII/DISCRIMINATION", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("SEXUAL DISCRIMINATION & HARASSEMENT"), "SEXUAL HARASSMENT DISCRIMINATION", df$Primary_Cause)
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("OTHER POLICE MISCONDUCT: NON-INTENT.",
+                                                                           "POLICE MISCONDUCT -  OTHER",
+                                                                           "OTHER POLICE MISCONDUCT",
+                                                                           "POLICE MISCONDUCT"), "POLICE/MISCONDUCT", df$Primary_Cause)
+
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("ILLEGAL SEARCH AND SEIZURE",
+                                                                           "ILLEGAL SEARCH/SEIZURE",
+                                                                           "UNREASONABLE SEARCH & SEIZURE",
+                                                                           "UNLAWFUL SEARCH",
+                                                                           "ILLEGAL STOP AND SEARCH",
+                                                                           "ILLEGAL STOP AND SEARCH",
+                                                                           "WRONGFUL SEARCH",
+                                                                           "UNLAWFUL SEARCH AND SEIZURE",
+                                                                           "UNREASONABLE SEARCH",
+                                                                           "ILLEGAL SEARCH & SEIZURE"), "ILLEGAL SEARCH", df$Primary_Cause)
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("FALSE ARREST/UNLAWFUL SEARCH"), "UNLAWFUL SEARCH/FALSE ARREST", df$Primary_Cause)
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE/UNLAWFUL SEARCH"), "EXCESSIVE FORCE/ILLEGAL SEARCH", df$Primary_Cause)
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("ADA FAILURE TO ACCOMMODATE, DISCRIMATION"), "ADA DISCRIMINATION", df$Primary_Cause)
+
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("FOIA SUIT",
+                                                                           "FOIA ATTORNEY FEES",
+                                                                           "FOIA LITIGATION",
+                                                                           "FOIA ACTION",
+                                                                           "FOIA VIOLATION"), "FOIA", df$Primary_Cause)
 
 ```
 
