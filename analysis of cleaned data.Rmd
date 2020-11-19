@@ -409,15 +409,6 @@ df_cw_payees %>% ggplot(aes(x=Payment_Amount))+
 df_cw_payees %>% group_by(Payment_Amount) %>% summarize(count = n())
 ```
 ```{r, echo =T}
-payments <- data.frame(payment_amount = c(12000000, 3600000+84150.40, 11848340, 3670092), payment_type = c("City Settlement", "Ordered Attorney Fees & Costs", "Total Payment to Payees", "Total Attorney Fees & Costs"))
-payments$payment_type <- factor(payments$payment_type, levels=c("Ordered Attorney Fees & Costs", "Total Attorney Fees & Costs", "City Settlement", "Total Payment to Payees"))
-
-payments %>% group_by(payment_type) %>% 
-  ggplot(aes(x=payment_type, y = payment_amount)) +
-  geom_col()+
-  theme(legend.position = "none")+
-  theme(axis.text.x=element_text(angle=10, hjust = 1))
-
 payments2 <- data.frame(payment_amount = c(12000000, 3600000+84150.40, 11848340, 3670092), payment_status = c("Ordered", "Ordered", "Dataset", "Dataset"), payment_type=c("Payment to Plaintiffs", "Attorney Fees & Costs", "Payment to Plaintiffs", "Attorney Fees & Costs"))
 payments2$payment_status <- factor(payments2$payment_status, levels = c("Ordered", "Dataset"))
 payments2$payment_status <- factor(payments2$payment_status)
