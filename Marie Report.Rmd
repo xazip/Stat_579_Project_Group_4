@@ -1,0 +1,314 @@
+---
+title: "Marie's Part of the Report"
+author: "Marie Hardt"
+date: "11/22/2020"
+output: pdf_document
+font_size: 12pt
+references:
+- id: EofC
+  title: Shakman Decrees
+  author:
+  - family: Fross
+    given: Roger R.
+  container-title: The Electronic Encyclopedia of Chicago
+  URL: 'http://www.encyclopedia.chicagohistory.org/pages/1138.html'
+  publisher: Chicago Historical Society
+  type: article
+  issued:
+    year: 2005
+- id: judge
+  title: Shakman vs. City of Chicago
+  URL: 'https://casetext.com/case/shakman-v-city-of-chicago-2'
+  publisher: No. 69 C 2145 (N.D. Ill. Mar. 18, 2008)
+  type: book
+  issued: 2008
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.pos = 'h')
+```
+
+## R Markdown
+
+```{r, include=F}
+# Can use this function to quickly install and load all packages
+
+#Load required Packages
+
+
+
+#packages <- c("readxl", "tidyverse", "purrr", "shiny", "shinydashboard",
+             # "shinydashboardPlus", "shinythemes", "stringr", "ggplot2", "plotly", "lubridate",
+              #"viridis", "rayshader")
+
+#for (pkgs in packages){
+# if(!require(pkgs, character.only = TRUE)){ # Condition 
+#  install.packages(pkgs) # Install if not in set 1
+# library(pkgs) # Load if installed
+#}
+#}
+
+
+
+
+
+```
+
+
+```{r, , echo = F, warning=FALSE, include=F}
+
+
+library(readxl)
+library(tidyverse)
+library(purrr) #optional
+library(shiny) #optional
+library(shinydashboard) #optional
+library(shinydashboardPlus) #optional
+library(shinythemes) #optional
+library(stringr)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+library(viridis) #optional
+library(rayshader) #optional (Heike hates this package but I love it lol)
+
+library(naniar)
+
+library(tidyr)
+
+```
+
+
+```{r, echo = F, warning=FALSE, include=F}
+
+df <- read_excel("all_lawsuits_2008_to_2019.xlsx")
+
+head(df)
+```
+
+<!-- #### Case Number: Identification of the case -->
+<!-- #### Payee: Person or group of people who is/are owed money  -->
+<!-- #### Payment Amount:  Amount paid to the Payee -->
+<!-- #### Fees and Costs: Costs associated with the settlement -->
+<!-- #### Primary Cause: Short insight behind the settlement -->
+<!-- #### City Department Involved: Department of Chicago involved in the settlement -->
+<!-- #### Disposition: Final type of Settlement -->
+<!-- #### Tort: Number of wrongful acts or infringement of rights leading to civil legal liability(big no no) -->
+<!-- #### Date to Comptroller: Date to comptroller ? -->
+<!-- #### Year to Comptroller: Year to Comptroller ? -->
+<!-- #### Monto to Comptroller: Month to Comptroller? -->
+<!-- #### Payment Amount(Millions): Payment amount in terms of millions of dollars -->
+<!-- #### Fees and Costs(Millions): Fees and Costs in terms of millions of dollars -->
+<!-- #### Total Paid: Payment Amount + Fees and Cost -->
+<!-- #### Total Paid(millions): Total Paid in terms of millions of dollars -->
+
+```{r, echo=F}
+#Spaces in column names are a no no for me so I am going to replace them with underscores using gsub
+
+names(df) <- gsub(" ", "_", names(df))
+
+```
+
+```{r,echo=F}
+# Columns that are 100% missing data are of no use so I am removing them
+
+df <- df %>% select(-Payment_Fund, -Effective_Date, -Due_Date, -Client_Department)
+
+```
+
+```{r,echo=F}
+
+#Tort column is easy fix, NA should be 0
+
+df <- df %>%
+  mutate(Tort = ifelse(is.na(Tort) == TRUE, 0, Tort))
+
+
+```
+
+
+
+```{r,echo=F, include=F}
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("ANIM CARE & CONTROL", "ANIMAL C0NTROL", "ANIMAL CARE/CONTROL"), "ANIMAL CONTROL", df$City_Department_Involved) #Animal Services
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("BUS AFFAIRS & LCNSE", "BUS. AFFAIRS/CONS. SERV."), "BUS AFFAIRS", df$City_Department_Involved) # Bus Services
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("DEPT OF AVIATION"), "AVIATION", df$City_Department_Involved) #Aviation
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("CULT AFF & SPEC EVNT"), "CULTURAL AFFAIRS", df$City_Department_Involved) #Cultural Affairs
+
+df$City_Department_Involved <-
+  ifelse(df$City_Department_Involved %in% c("EMER MGMT & COMM", "EMERG COMMUNICATION", "MERG COMMUNICATIO"), "EMERGENCY COMMUNICATION", df$City_Department_Involved)#Emergency communications
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("ENVIRON."), "ENVIRONMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FAM & SUPPORT SRVCS"), "FAMILY & SUPPORT SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FIRE", "FIRE DEPT"), "FIRE DEPARTMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FLEET MGMT"), "FLEET MANAGEMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("GEN. SERV."), "GENERAL SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("HOUSING & ECON DEV"), "HOUSING", df$City_Department_Involved)
+
+df$City_Department_Involved <- 
+  ifelse(df$City_Department_Involved %in% c("WATER MGMT / SEWERS", "WATER MGMT / SEWER", "WATER", "SEWERS", "SEWER", "WATER MGMT / WATER"), "WATER MANAGEMENT", df$City_Department_Involved)
+
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("CDOT"), "TRANSPORTATION", df$City_Department_Involved)
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("HUMAN RESOURCES"), "HUMAN SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC HEALTH", "DISABILITY"), "HEALTH", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC LIBRARY"), "LIBRARY", df$City_Department_Involved)
+
+
+```
+
+
+```{r,echo=F,include=F}
+
+df %>% 
+  group_by(City_Department_Involved) %>%
+    summarise(n = unique(Primary_Cause)) %>% ungroup %>% filter(City_Department_Involved == "POLICE")
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "dodgerblue4")+
+          coord_flip()+ 
+            theme_bw()+
+              theme(axis.text.y = element_text(size = 10, angle = 45))
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+    filter(n <= 10) %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "olivedrab2")+
+          coord_flip()+ 
+            theme_bw()+ 
+              theme(axis.text.y = element_text(size = 7, angle = 45))
+
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+    filter(n > 10 & n < 25) %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "tomato2")+
+          coord_flip()+ 
+            theme_bw()+ 
+              theme(axis.text.y = element_text(size = 7, angle = 45))
+
+
+
+df %>% group_by(City_Department_Involved) %>%
+  summarise(n = length(unique(Primary_Cause))) %>% ungroup() %>%
+    filter(n >= 25) %>%
+      ggplot(aes(x = City_Department_Involved, y = n))+
+        geom_bar(stat = "identity", fill = "orange")+
+          coord_flip()+ 
+            theme_bw()+
+              theme(axis.text.y = element_text(size = 7, angle = 45))
+
+
+df %>% group_by(City_Department_Involved, Payment_Amount) %>%
+  summarise(causes = unique(Primary_Cause)) %>% ungroup() %>%
+  group_by(City_Department_Involved, causes) %>% summarise(average_settlement = mean(Payment_Amount))
+
+
+
+x <- df %>% group_by(City_Department_Involved) %>%
+  summarise(causes = length(unique(Primary_Cause)),
+            Average_Settlement = mean(Payment_Amount, na.rm = TRUE) / 1000,
+            Average_Total_Amount = mean(Total_Paid, na.rm = TRUE) / 1000) %>%
+    ungroup() %>% filter(causes >= 25) %>%
+  ggplot(aes(x = City_Department_Involved))+
+    geom_col(aes(y = causes), fill = "black")+ 
+      geom_line(aes(y = Average_Settlement, group = 1), color = "dodgerblue3", size = 1.5)+
+      geom_line(aes(y = Average_Total_Amount, group = 1), color = "red2", size = 1)+
+        #coord_flip()+ 
+          theme_bw()+ 
+          theme(axis.text.x = element_text(size = 7, angle = 45, hjust = 1)) + xlab("Organization") + ylab("Number of Unique Causes")
+
+#ggplotly(x)
+
+```
+
+# Marie's stuff begins
+
+While investigating the city departments that had the most lawsuits and administrative claims where the city of Chicago had to pay money, we noted that there was only one unique primary cause for the city-wide lawsuits, and all of them went to the comptroller at almost the same time. We decided to further investigate these lawsuits.
+
+<!-- Violations of the Shakman Consent Decree were the only primary cause for city-wide lawsuits.  -->
+```{r, echo = F, include=F}
+df_cw <- df %>% filter(City_Department_Involved == "CITY WIDE")
+
+#df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
+  #geom_bar()+
+  #cale_x_continuous(breaks = seq(1, 12, 1), labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"))+
+  #labs(title="Lawsuits by Month for the City Wide Department",
+       #x = "Month",
+       #y="Count")
+
+df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
+  geom_bar()+
+  scale_x_continuous(breaks = seq(1, 12, 1), labels = c("", "", "", "", "May 28, 2008", "June 10, 2008", "", "", "", "", "", "" ))+
+  labs(title="City-Wide Lawsuits by Date",
+       x = "Month",
+       y="Count")
+```
+
+<!-- The bar chart indicates that the City Wide department was only sued in May and June.  -->
+
+```{r, echo = F, include=F}
+unique(df_cw$Primary_Cause)
+unique(df_cw$Year_to_Comptroller)
+```
+
+The primary cause of all of the city-wide lawsuits was a violation of the Shakman Consent Decree. Per the Encyclopedia of Chicago, the Shakman Consent Decree means that government workers cannot be hired or fired on the basis of their political beliefs or support for a particular politician or political party [@EofC]. Litigation about the Shakman consent decrees has been ongoing since 1969, when Michael L. Shakman and Paul M. Lurie originally filed a lawsuit on behalf of themselves and others who claimed that the City of Chicago made support of the Cook County Regular Democratic Organization a condition of employment with the city, which was a violation of the plaintiffs' constitutional rights. Other plaintiffs have joined the suit as the litigation has continued over the past fifty years [@judge].
+
+<!-- Let's see if violations of the Shakman Consent Decree come up as primary causes in any other lawsuits. -->
+
+```{r, echo = F, include=F}
+df_scd <- df %>% filter(Primary_Cause == "VIOLATIONS OF SHAKMAN CONSENT DECREE")
+all.equal(df_scd, df_cw)
+```
+
+<!-- No, violations of the Shakman consent decree were not the primary causes of any lawsuits other than those filed against the City.  -->
+
+Our dataset contains information about Shakman litigation that resulted in payments by the City of Chicago in 2008. The City agreed to pay a \$12 million settlement for violations of the Shakman consent decree. Wayne Andersen, a judge in the federal district court, also ordered that the City should pay \$3,600,000 for attorneys' fees plus an additional \$84,150.40 for attorneys' costs for the litigation [@judge]. The graphic below compares the amounts the City was agreed to pay and the amounts the City actually paid according to our data.
+
+```{r, echo = F}
+payments2 <- data.frame(payment_amount = c(12000000, 3600000+84150.40, 11848340, 3670092), payment_status = c("Ordered", "Ordered", "Dataset", "Dataset"), payment_type=c("Payment to Plaintiffs", "Attorney Fees & Costs", "Payment to Plaintiffs", "Attorney Fees & Costs"))
+payments2$payment_status <- factor(payments2$payment_status, levels = c("Ordered", "Dataset"))
+payments2$payment_status <- factor(payments2$payment_status)
+
+payments2 %>% ggplot(aes(x=payment_status, y=payment_amount, fill = payment_status))+
+  geom_col()+
+  facet_wrap(~payment_type)+
+  scale_fill_grey(start = 0.5, end = 0.25)+
+  labs(title="Comparison of Ordered Payments to Payments in Dataset",
+       x = "Payment Type",
+       y = "Payment Amount (US$)")+
+  theme(legend.position = "none")
+```
+
+From the graphic, it looks like the City did pay close to the amounts it agreed to pay. About \$3.6 million was paid for attorney's fees and costs. The City spent about \$11.8 million to pay off the settlement, which was agreed to be \$12 million. The discrepancy could be due to taxes, interest, or some other factor. 
+
+```{r, echo=F, include=F}
+sum(df_cw$Payment_Amount) # Total paid to plaintiffs
+sum(df_cw$Fees_and_Costs) # total paid to attorney
+```
+
+Now we will further investigate the payments to individual plaintiffs in the litigation. We can see that 1,426 people received payments from the City of Chicago as a result of the Shakman consent decree litigation in 2008. There were 12 different payment amounts ranging from \$250 to \$100,000. The most common payment amount was \$1,500, which was awarded to 418 people. Only one person received \$100,000 as a result of this litigation. As *Shakman vs. City of Chicago* is still ongoing litigation, it seems likely that the City of Chicago will have to pay more money for violations of the Shakman Consent Decree in the future.
+
+```{r, echo=F}
+df_cw_payees <- df_cw[-c(1:2),]
+df_cw_payees %>% ggplot(aes(x=Payment_Amount))+
+  geom_histogram(binwidth = 1000)+
+  labs(title="Payments for Shakman Consent Decree Violation Lawsuits in 2008",
+       x="Payment Amount (US$)",
+       y="Number of Payees")
+```
+
+```{r, echo = F, include=F}
+df_cw_payees %>% group_by(Payment_Amount) %>% summarize(count = n())
+```
