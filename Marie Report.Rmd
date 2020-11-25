@@ -17,7 +17,7 @@ references:
   issued:
     year: 2005
 - id: judge
-  title: Shakman vs. City of Chicago
+  title: Shakman v. City of Chicago
   URL: 'https://casetext.com/case/shakman-v-city-of-chicago-2'
   publisher: No. 69 C 2145 (N.D. Ill. Mar. 18, 2008)
   type: book
@@ -272,9 +272,9 @@ df_scd <- df %>% filter(Primary_Cause == "VIOLATIONS OF SHAKMAN CONSENT DECREE")
 all.equal(df_scd, df_cw)
 ```
 
-<!-- No, violations of the Shakman consent decree were not the primary causes of any lawsuits other than those filed against the City.  -->
+<!-- No, violations of the Shakman Consent Decree were not the primary causes of any lawsuits other than those filed against the City.  -->
 
-Our dataset contains information about Shakman litigation that resulted in payments by the City of Chicago in 2008. The City agreed to pay a \$12 million settlement for violations of the Shakman consent decree. Wayne Andersen, a judge in the federal district court, also ordered that the City should pay \$3,600,000 for attorneys' fees plus an additional \$84,150.40 for attorneys' costs for the litigation [@judge]. The graphic below compares the amounts the City was agreed to pay and the amounts the City actually paid according to our data.
+Our dataset contains information about Shakman litigation that resulted in payments by the City of Chicago in 2008. The City agreed to pay a \$12 million settlement for violations of the Shakman Consent Decree. Wayne Andersen, a judge in the federal district court, also ordered that the City should pay \$3,600,000 for attorney's fees plus an additional \$84,150.40 for attorney's costs for the litigation [@judge]. The graphic below compares the amounts the City was agreed to pay and the amounts the City actually paid according to the data we have.
 
 ```{r, echo = F}
 payments2 <- data.frame(payment_amount = c(12000000, 3600000+84150.40, 11848340, 3670092), payment_status = c("Ordered", "Ordered", "Dataset", "Dataset"), payment_type=c("Payment to Plaintiffs", "Attorney Fees & Costs", "Payment to Plaintiffs", "Attorney Fees & Costs"))
@@ -291,14 +291,14 @@ payments2 %>% ggplot(aes(x=payment_status, y=payment_amount, fill = payment_stat
   theme(legend.position = "none")
 ```
 
-From the graphic, it looks like the City did pay close to the amounts it agreed to pay. About \$3.6 million was paid for attorney's fees and costs. The City spent about \$11.8 million to pay off the settlement, which was agreed to be \$12 million. The discrepancy could be due to taxes, interest, or some other factor. 
+From the graphic, it looks like the City of Chicago did pay close to the amounts it was required to pay. About \$3.6 million was paid for attorney's fees and costs. The City spent about \$11.8 million to pay off the settlement, which was agreed to be \$12 million. The discrepancy could be due to taxes, interest, or some other factor. 
 
 ```{r, echo=F, include=F}
 sum(df_cw$Payment_Amount) # Total paid to plaintiffs
 sum(df_cw$Fees_and_Costs) # total paid to attorney
 ```
 
-Now we will further investigate the payments to individual plaintiffs in the litigation. We can see that 1,426 people received payments from the City of Chicago as a result of the Shakman consent decree litigation in 2008. There were 12 different payment amounts ranging from \$250 to \$100,000. The most common payment amount was \$1,500, which was awarded to 418 people. Only one person received \$100,000 as a result of this litigation. As *Shakman vs. City of Chicago* is still ongoing litigation, it seems likely that the City of Chicago will have to pay more money for violations of the Shakman Consent Decree in the future.
+Now we will further investigate the payments to individual plaintiffs in the litigation. We can see that 1,426 people received payments from the City of Chicago as a result of the Shakman Consent Decree litigation in 2008. There were 12 different payment amounts ranging from \$250 to \$100,000. The most common payment amount was \$1,500, which was awarded to 418 people. Only one person received \$100,000 as a result of this litigation. As *Shakman v. City of Chicago* is still ongoing litigation, it seems likely that the City of Chicago will have to pay more money for violations of the Shakman Consent Decree in the future.
 
 ```{r, echo=F}
 df_cw_payees <- df_cw[-c(1:2),]
@@ -310,5 +310,6 @@ df_cw_payees %>% ggplot(aes(x=Payment_Amount))+
 ```
 
 ```{r, echo = F, include=F}
+# Summary of payments
 df_cw_payees %>% group_by(Payment_Amount) %>% summarize(count = n())
 ```
