@@ -288,7 +288,8 @@ payments2 %>% ggplot(aes(x=payment_status, y=payment_amount, fill = payment_stat
   labs(title="Comparison of Ordered Payments to Payments in Dataset",
        x = "Payment Type",
        y = "Payment Amount (US$)")+
-  theme(legend.position = "none")
+  theme(legend.position = "none")+
+  theme_bw()
 ```
 
 From the graphic, it looks like the City of Chicago did pay close to the amounts it was required to pay. About \$3.6 million was paid for attorney's fees and costs. The City spent about \$11.8 million to pay off the settlement, which was agreed to be \$12 million. The discrepancy could be due to taxes, interest, or some other factor. 
@@ -306,7 +307,8 @@ df_cw_payees %>% ggplot(aes(x=Payment_Amount))+
   geom_histogram(binwidth = 1000)+
   labs(title="Payments for Shakman Consent Decree Violation Lawsuits in 2008",
        x="Payment Amount (US$)",
-       y="Number of Payees")
+       y="Number of Payees")+
+  theme_bw()
 ```
 
 ```{r, echo = F, include=F}
