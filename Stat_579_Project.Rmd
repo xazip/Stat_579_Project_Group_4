@@ -185,6 +185,8 @@ df %>% filter(is.na(Primary_Cause) == TRUE) # Missing primary cost deals with Tr
 
 ```{r}
 
+df %>% group_by(City_Department_Involved) %>% summarise(n = length(unique(Primary_Cause)))
+
 df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("ANIM CARE & CONTROL", "ANIMAL C0NTROL", "ANIMAL CARE/CONTROL"), "ANIMAL CONTROL", df$City_Department_Involved) #Animal Services
 
 df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("BUS AFFAIRS & LCNSE", "BUS. AFFAIRS/CONS. SERV."), "BUS AFFAIRS", df$City_Department_Involved) # Bus Services
@@ -306,7 +308,7 @@ df$Primary_Cause <-
 #-----------------------------------------------------------------------------------------------------------------------------------#
 df %>% filter(City_Department_Involved == "POLICE") %>% {print(unique(.$Primary_Cause))}
 
-df %>% filter(City_Department_Involved == "POLICE" & str_detect(Primary_Cause, "FALSE")) %>% {print(unique(.$Primary_Cause))}
+df %>% filter(City_Department_Involved == "POLICE" & str_detect(Primary_Cause, "EXCESSIVE")) %>% {print(unique(.$Primary_Cause))}
 
 
 df$Primary_Cause <- 
@@ -418,22 +420,22 @@ df$Primary_Cause <-
 
 
 df$Primary_Cause <- 
-  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE/SERIOUS",
-                                                                           "EXCESSIVE FORCE MINOR",
-                                                                           "EXCESSIVE FORCE/MALICIOUS PROSECUTION",
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE/MALICIOUS PROSECUTION",
                                                                            "EXCESSIVE FORCE/FAILURE TO PROTECT",
                                                                            "EXCESSIVE FORCE/ELBOW STRIKE",
                                                                            "EXCESSIVE DETENITION/MALICIOUS PROSECUTION",
-                                                                           "EXCESSIVE FORCE/MINOR",
-                                                                           "EXCESSIVE FORCE - SERIOUS",
                                                                            "EXCESSIVE FORCE/FALSE ARREST/EMOTIONAL",
                                                                            "EXCESSIVE FORCE/TASER",
                                                                            "EXCESSIVE FORCE/ILLEGAL SEARCH",
                                                                            "EXCESSIVE FORCE/ILLEGAL SEIZURE",
-                                                                           "EXCESSIVE FORCE SERIOUS",
                                                                            "EXCESSIVE FORCE/FAILURE TO INTERVENE",
                                                                            "EXCESSIVE FORCE/DENIAL OF MEDICAL CARE",
                                                                            "EXCESSIVE FORCE/SERIOUS/BURGE REPARATIONS"), "EXCESSIVE FORCE", df$Primary_Cause)
+
+
+df$Primary_Cause <- 
+  ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE - SERIOUS", "EXCESSIVE FORCE SERIOUS"), "EXCESSIVE FORCE/SERIOUS", df$Primary_Cause)
+
 
 df$Primary_Cause <- 
   ifelse(df$City_Department_Involved == "POLICE" & df$Primary_Cause %in% c("EXCESSIVE FORCE/WRONGFUL DEATH"), "WRONGFUL DEATH", df$Primary_Cause)
