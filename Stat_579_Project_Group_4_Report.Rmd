@@ -504,82 +504,82 @@ The `Primary_Cause` column also contains duplicate primary causes that differ ba
 
 Another variable of interest was the `Case_Number`. On their own, the case numbers are not very useful in analyzing the data, except for a few rare cases where there are many payees for the same case, such as the Shakman litigation we discuss later on. The case numbers take on forms such as “07 L 828,” “182-A05608-1,” and “CI-12-501254-01.” After doing further research, we were able to extract other information from certain formats. For example, case numbers with two numbers and a space followed by “L,”  “M,” or  “CH” are Cook County Circuit Court cases, and the letters “L,”  “M,” and  “CH” represent the Law, Civil, and Chancery Division, respectively. The first two numbers encode the year filed; for example, 07 and 74 represent 2007 and 1974, respectively [@casenumberformats; @circuitcourtcasesearch]. Similarly, case numbers formatted with two numbers and a space followed by “C” are Federal District Court cases; again, the numbers encode the year filed [@casenumberformats]. There were also some formats that we were able to identify as administrative claims, such as those that begin with “182,” “011,” “2011”, or “CI” [@casenumberformats; @CIcaseformat]. For these, we were unable to extract any other information, but this may be because administrative claims take a shorter time to process, and thus the year filed is not encoded into the case number. In the end, out of the 13,454 rows of data, we were left with only 171 rows whose case numbers we were unable to decipher.
 
-```{r case-number, echo=FALSE, message=FALSE, warning=FALSE}
+```{r case-number, include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 
-df1 <- df %>%
+df <- df %>%
   separate(Case_Number, into = c("Year_Filed", "Type", "Court_Case_Number"), 
            sep = " ", fill = "left") 
 # Warning: Expected 3 pieces. Additional pieces discarded in 4 rows [4177, 7148, 8949, 10283].
 # Let's fix these values
-df1$Court_Case_Number[4177] <- "7450"
-df1$Court_Case_Number[7148] <- "51 181 Y 01253 12"
-df1$Year_Filed[7148] <- NA
-df1$Type[7148] <- NA
-df1$Court_Case_Number[8949] <- "CC001"
-df1$Type[8949] <- "PRE LIT"
-df1$Court_Case_Number[10283] <- "992"
-df1$Type[10283] <- "C L"
+df$Court_Case_Number[4177] <- "7450"
+df$Court_Case_Number[7148] <- "51 181 Y 01253 12"
+df$Year_Filed[7148] <- NA
+df$Type[7148] <- NA
+df$Court_Case_Number[8949] <- "CC001"
+df$Type[8949] <- "PRE LIT"
+df$Court_Case_Number[10283] <- "992"
+df$Type[10283] <- "C L"
 
 # Examine Year_Filed values
-unique(df1$Year_Filed)
+unique(df$Year_Filed)
 
-df1 %>%
+df %>%
   filter(Year_Filed == "69")
 # This is fine. Shakman filed his lawsuit in 1969.
 # https://en.wikipedia.org/wiki/Shakman_Decrees
 
-df1 %>%
+df %>%
   filter(Year_Filed == "74")
 # Looked into this and it looks plausible. (Possibly same Westlaw case as below)
 
-df1 %>%
+df %>%
   filter(Year_Filed == "75")
 # Looked into this and it looks plausible.
 
-df1 %>%
+df %>%
   filter(Year_Filed == "10-3957")
 # This is definitely separated wrong
-df1 <- df1 %>%
+df <- df %>%
   mutate(
     Type = ifelse(Year_Filed == "10-3957", NA, Type),
     Court_Case_Number = ifelse((!is.na(Year_Filed)) & (Year_Filed == "10-3957"), 
                                "10-3957 & 10-3965", Court_Case_Number), 
     Year_Filed = ifelse(Year_Filed == "10-3957", NA, Year_Filed)
   )
-sum(is.na(df1$Court_Case_Number))
+sum(is.na(df$Court_Case_Number))
 # Now let's examine the Type
-unique(df1$Type)
+unique(df$Type)
 
-df1 %>%
+df %>%
   filter(Type == "-")
 # Looks fine, though Type doesn't really mean much in this case
 
 # Fix Year_Filed
-df1 <- df1 %>%
+df <- df %>%
   mutate(
     Year_Filed = as.numeric(Year_Filed),
     Year_Filed = ifelse(Year_Filed < 20, Year_Filed+2000, Year_Filed+1900)
   ) 
-summary(df1$Year_Filed)  
+summary(df$Year_Filed)  
 
 # Fix Type
-unique(df1$Type)
+unique(df$Type)
 
-df1 %>%
+df %>%
   filter(Type=="CH")
 # Figured out that this is Chancery Court
 
-df1 %>%
+df %>%
   filter(Type=="l")
 # Couldn't find them on this website
 # http://www.cookcountyclerkofcourt.org/CourtCaseSearch/DocketSearch.aspx
 
-df1 %>%
+df %>%
   filter(Type=="m1")
 # This is a typo. Should be M1. (Found in website directly above.)
 
 # Use Type to get division and court
-df1 <- df1 %>%
+df <- df %>%
   mutate(
     Court = ifelse(Type %in% c("L", "CH", "M1", "M", "M6", "M2", "M4", "M5", "M3", "MI", "m1"),
                    "Cook County Circuit Court", NA),
@@ -591,11 +591,11 @@ df1 <- df1 %>%
   )
 
 # Now we separate out the administrative claims using the case number
-df1 <- df1 %>%
+df <- df %>%
   separate(Court_Case_Number, into = c("Administrative", "Administrative_Case_Number"), 
            sep = "-", extra = "merge", fill = "left") 
 
-df1 <- df1 %>%
+df <- df %>%
   mutate(
     Administrative = ifelse(Administrative %in% c("182", "011", "2011", "CI"), 
                             TRUE, NA),
@@ -603,15 +603,15 @@ df1 <- df1 %>%
   )
 
 # number of rows with unidentified case numbers
-nrow(filter(df1, is.na(Administrative)))
+nrow(filter(df, is.na(Administrative)))
 # number of rows in total
-nrow(df1)
+nrow(df)
 ```
 
 In exploring the information we extracted from the case number, one strange thing we noticed was that there were some negative payouts for administrative claims. 
 
 ```{r negative-claims, echo=FALSE, message=FALSE, warning=FALSE}
-df1 %>%
+df %>%
   filter(Administrative) %>%
   ggplot(aes(x = Total_Paid)) + 
   geom_histogram(binwidth = 500) + 
@@ -631,7 +631,7 @@ Interestingly though, we found a lot of triples, meaning that the same payee, sa
 One thing that might be of interest is the difference in payout between Federal District Court and the Cook County Circuit Court. In many cases, plaintiffs can choose which court to sue in. If one court generally offers a higher payout, plaintiffs may choose to sue in that court. Thus, we plotted a box plot of the payouts based on the type of court. Because the payouts are so right-skewed, we had to use a log scale. The median payout in the Federal District Court is noticeably higher than the Cook County Circuit Court, and the spreads are similar. 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-df1 %>%
+df %>%
   filter(!is.na(Court)) %>%
   ggplot(aes(x = Court, y = log10(Total_Paid))) + 
   geom_boxplot() + 
@@ -642,7 +642,7 @@ df1 %>%
 We can also examine a histogram of the payouts for the two courts. Since the payouts are very right-skewed, we’ll exclude the top 10% of payments. Interestingly, there are spikes at “round” numbers (e.g. \$10k, \$20k, \$30k). These spikes seem more apparent for federal court, which may be because there are more federal cases with a lot of payees that get the same amount, such as the Shakman case we discuss in the next section.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-df1 %>%
+df %>%
   filter(!is.na(Court), Total_Paid < quantile(Total_Paid, probs = .9, na.rm=TRUE),
          Total_Paid > 0) %>%
   ggplot(aes(x = Total_Paid)) +
@@ -658,10 +658,10 @@ df1 %>%
 
 Now that we have both the `Year_Filed` and `Year_to_Comptroller` variables, we can get a rough estimate of the length of the court case. Although the variable is not very precise (e.g. a court case that was 2 years and 1 day could be labeled as 3 years), we can still see that out of the top 5 city departments, the fire department has by far the largest IQR.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Choose certain departments
 # Let's look at the number of cases in each department
-df1 %>%
+df %>%
   mutate(
     Length = Year_to_Comptroller - Year_Filed
   ) %>%
@@ -672,9 +672,10 @@ df1 %>%
 # It looks like 300 cases might be a good cutoff
 # City Wide is analyzed separately, so let's just look at 
 # Police, Transportation, Water Management, Streets & Sanitation, Fire Department
+```
 
-
-df1 %>%
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+df %>%
   mutate(
     Length = Year_to_Comptroller - Year_Filed
   ) %>%
@@ -687,16 +688,18 @@ df1 %>%
   ylab("Length of Court Case (Years)") + 
   coord_flip() + 
   theme_bw()
+```
 
+```{r include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Fire Department has far larger IQR. Why?
-fire_long <- df1 %>%
+fire_long <- df %>%
   mutate(
     Length = Year_to_Comptroller - Year_Filed
   ) %>%
   filter(City_Department_Involved == "FIRE DEPARTMENT", Length >= 5) 
 unique(fire_long$Primary_Cause)
 nrow(fire_long)
-nrow(filter(df1, City_Department_Involved == "FIRE DEPARTMENT"))
+nrow(filter(df, City_Department_Involved == "FIRE DEPARTMENT"))
 
 nrow(fire_long %>%
   filter(Primary_Cause %in% c("FIRE FIGHTERS CLAIM REVERSE DISCRIM. 1986 LT'S EXAM", 
@@ -710,9 +713,10 @@ Investigating the 163 fire department cases that took 5 or more years, we found 
 
 Another critical question is whether a given lawsuit is “worth it.” Lawsuits take a great deal of money to carry out. One factor to look at is the payout. Again, we use the log scale. Examining the top five primary causes in the police department, we see that successful lawsuits with serious excessive force as their primary cause have the highest median payout of around \$100,000. In comparison, motor vehicle accidents which only caused property damage had the lowest median payout of somewhere between \$1000 to \$10,000. The three primary causes in the middle (illegal search/seizure, false arrest, and minor excessive force) have a similar median payout of somewhere between \$10,000 to \$100,000.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+```{r include=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
 # Let's look at the top primary causes in the Police department
-df1 %>%
+df %>%
   mutate(
     Length = Year_to_Comptroller - Year_Filed
   ) %>%
@@ -720,8 +724,10 @@ df1 %>%
   group_by(Primary_Cause) %>%
   summarize(n = n()) %>%
   arrange(-n)
+```
 
-df1 %>%
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+df %>%
   mutate(
     Length = Year_to_Comptroller - Year_Filed
   ) %>%
@@ -741,7 +747,7 @@ df1 %>%
 However, this is far from the only factor a potential plaintiff ought to take into consideration; the length of the court case is another important factor. Longer court cases generally take more money to continue. Plotting boxplots of the lengths of court cases by primary cause, we see that serious excessive force cases have a much longer median length of around 3 years compared to the shortest median length of 0 years for motor vehicle accidents that only cause property damage. While the primary causes in the middle are still the same three as for the payout boxplots, the false arrest and illegal search/seizure median lengths are closer to 1 year while the minor excessive force median length is closer to 2 years.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-df1 %>%
+df %>%
   mutate(
     Length = Year_to_Comptroller - Year_Filed
   ) %>% 
