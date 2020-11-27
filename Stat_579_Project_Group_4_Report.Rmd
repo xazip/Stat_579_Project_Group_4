@@ -78,18 +78,18 @@ Lastly, and the reason we ultimately ended up choosing this topic over others wa
 
 ## Dataset Cleaning
 
-```{r, echo = F}
+```{r, echo = F, message=FALSE}
 df <- read_excel("all_lawsuits_2008_to_2019.xlsx")
 ```
 
-```{r, echo = F}
+```{r, echo = F, warning=FALSE, message=F}
 #Spaces in column names are a no no for me so I am going to replace them with underscores using gsub
 
 names(df) <- gsub(" ", "_", names(df))
 
 ```
 
-```{r, echo = F}
+```{r, echo = F, warning=F, message=F}
 # Let's first investigate the missing values throughtout the data set
 
 
@@ -132,14 +132,14 @@ vis_miss(df)
 
 ```
 
-```{r, echo = F}
+```{r, echo = F, warning=F, message=F}
 # Columns that are 100% missing data are of no use so I am removing them
 
 df <- df %>% select(-Payment_Fund, -Effective_Date, -Due_Date, -Client_Department)
 
 ```
 
-```{r, echo = F}
+```{r, echo = F, warning=F, message=F}
 
 #Tort column is easy fix, NA should be 0
 
@@ -149,7 +149,7 @@ df <- df %>%
 
 ```
 
-```{r, echo = F}
+```{r, echo = F, warning=F, message=F}
 
 df %>%
   gather(key = "columns", value = "column_values") %>%
@@ -175,7 +175,7 @@ df %>% filter(is.na(Primary_Cause) == TRUE) # Missing primary cost deals with Tr
 
 ```
 
-```{r, echo = F}
+```{r, echo = F, warning=FALSE, message=F}
 
 df %>% group_by(City_Department_Involved) %>% summarise(n = length(unique(Primary_Cause)))
 
@@ -210,7 +210,7 @@ df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("S&S"),
 
 ```
 
-```{r, echo = F}
+```{r, echo = F, warning=F, include=F, message=F}
 
 
 
