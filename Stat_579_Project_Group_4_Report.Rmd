@@ -46,21 +46,34 @@ library(naniar)
 
 ## Introduction
 
-We can write our final report in this document. The document class is set to report so we can easily have a cover page if we want.
+Our project looks at lawsuits and administrative claims involving the City of Chicago from 2008-2019. Aside from a very small number of cases which will be touched on later in the report, this dataset contains only successful lawsuits (meaning the City had to pay out money). The City has many departments in charge of dealing with various sectors of the city. With that being said, sometimes these departments make mistakes, either deliberately or accidentally. A lot of these occurrences result in lawsuits filed against the city. This could include a person getting hit by a bus and then suing the city and the corresponding transportation department. We could also have a much smaller scale lawsuit, such as a water leak from a nearby construction site damaging a homeowner’s yard. This could turn into a lawsuit involving the water management department.
+ 
+For our particular analysis, we were mostly interested in lawsuits, as administrative claims are on a much smaller scale. The first step we took was cleaning the data and determining which variables we wanted to keep, alter, or just throw out. Since this was a crucial part of our analysis, it will be addressed more in our data cleaning section. Initially, our main analysis focused on the amount of money in a particular lawsuit and the relationship it had with our other variables, such as date. After cleaning and inspecting the data more closely, we decided we were also very interested in the city department and the primary causes of the lawsuit. We wanted to answer questions such as:
+
+* Which departments are more often involved in lawsuits?
+* Is there a relationship between the year and the department involved?
+* Are there repeat primary causes that the city is getting sued for?
+
+Another interesting aspect of the data was the case number associated with each observation. Can the case number tell us something about a specific court or a type of case? Again, we did extensive work on this and will address it in more detail later. One particular area of interest was that a single case number (69 C 2145) occurred over one thousand times in the dataset. After further research, we discovered that this case number is associated with litigation that has been ongoing since 1969. This lawsuit, *Shakman v. City of Chicago*, will be discussed in further detail later.
+
+Lastly, and the reason we ultimately ended up choosing this topic over others was our interest in lawsuits involving the police department. Given that the main social talking point in the last few years in America has revolved around race and police misconduct, we were especially interested in investigating the police department. To no surprise, the police department has about double the cases than the next largest department. Our analysis will include a very focused look at the police department and the relationship between our other variables.
+
+
+
+## Dataset Cleaning
 
 ```{r, echo = F}
 df <- read.csv("all_lawsuits_2008_to_2019.xlsx")
 ```
 
-```{r}
+```{r, echo = F}
 #Spaces in column names are a no no for me so I am going to replace them with underscores using gsub
 
 names(df) <- gsub(" ", "_", names(df))
 
 ```
 
-
-```{r}
+```{r, echo = F}
 # Let's first investigate the missing values throughtout the data set
 
 
@@ -103,14 +116,14 @@ vis_miss(df)
 
 ```
 
-```{r}
+```{r, echo = F}
 # Columns that are 100% missing data are of no use so I am removing them
 
 df <- df %>% select(-Payment_Fund, -Effective_Date, -Due_Date, -Client_Department)
 
 ```
 
-```{r}
+```{r, echo = F}
 
 #Tort column is easy fix, NA should be 0
 
@@ -120,7 +133,7 @@ df <- df %>%
 
 ```
 
-```{r}
+```{r, echo = F}
 
 df %>%
   gather(key = "columns", value = "column_values") %>%
@@ -146,7 +159,7 @@ df %>% filter(is.na(Primary_Cause) == TRUE) # Missing primary cost deals with Tr
 
 ```
 
-```{r}
+```{r, echo = F}
 
 df %>% group_by(City_Department_Involved) %>% summarise(n = length(unique(Primary_Cause)))
 
@@ -181,7 +194,7 @@ df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("S&S"),
 
 ```
 
-```{r}
+```{r, echo = F}
 
 
 
@@ -428,5 +441,27 @@ df$Primary_Cause <-
                                                                            "FALSE ARREST/MALICIOUS PROSECUTION",
                                                                            "FALSE ARREST/CONSPIRACY"), "FALSE ARREST", df$Primary_Cause)
 ```
+
+
+The City of Chicago lawsuits and administrative claims dataset contains 19 columns and 13454 observations. The main variable of interest is `Total_Paid`, which is the sum of `Payment_Amount` and `Fees_and_Costs` and thus the total amount of money paid by the City of Chicago. The `Case_Number` variable is discussed later on in this section in more detail. `Primary_Cause` is another main variable of interest, as this is the primary reason for the City to pay out the money. We describe how we combined some of the similar causes later on in this section. The `City_Department` is the department which was involved in the lawsuit. The `Disposition` is the outcome of the case (e.g. if the case was settled, dismissed, etc.). The `Date_to_Comptroller` is the date when the City actually pays out the money (not when the case is filed). Thayee
+
+1. The individual or business entity involved in the lawsuit.
+ + We may not be interested in this variable if there are no payees who 
+
+We first determined the number of missing values in each column. There were six columns that contained more than 0.1 percent of missing values. Variables (`Payment_Fund`, `Effective_Date`, `Due_Date`, and `Client_Department`) are completely missing. After further examination of the dataset, we determined that these four columns could not be filled, so we decided to remove them. The `Tort` column consisted of 50% missing values. Tort is an identifier column describing whether the case dealt with a wrongful act or an infringement of a right; 1 if yes and 0 if no.  We examined the primary cause column to determine whether to fill in the missing values as 0 or 1. Finally, we were left with a total of 79 cells that contain missing values. 64 of those missing values are missing case numbers. The remaining 15 missing values consisted of missing payments, fees, and dates to the comptroller.  The decision of whether to remove or fill in these missing values was left up to the individual performing their separate analysis.
+
+There is still more data cleaning that needs to be done. The `City_Department` column contains duplicate departments that differ based on their character strings. We merge these City departments accordingly. Originally the dataset contained 75 city departments, and after merging duplicate departments, we were left with 48 city departments.
+
+The `Primary_Cause` column also contains duplicate primary causes that differ based on their character strings, but it was much harder to clean than `City_Department`. The `Primary_Cause` column has many more duplicate and unique primary causes. For example, the police department originally had 238 primary causes associated with it. After merging the similar primary causes for the Police Department, we were left with 154 primary causes. Moreover, choosing whether to combine ambiguous primary causes was a challenge. We went through each city department and cleaned their primary causes based on what domain knowledge we had at our disposal.
+
+Another variable of interest was the `Case_Number`. On their own, the case numbers are not very useful in analyzing the data, except for a few rare cases where there are many payees for the same case, such as the Shakman litigation we discuss later on. The case numbers take on forms such as “07 L 828,” “182-A05608-1,” and “CI-12-501254-01.” After doing further research, we were able to extract other information from certain formats. For example, case numbers with two numbers and a space followed by “L,”  “M,” or  “CH” are Cook County Circuit Court cases, and the letters “L,”  “M,” and  “CH” represent the Law, Civil, and Chancery Division, respectively. The first two numbers encode the year filed; for example, 07 and 74 represent 2007 and 1974, respectively [@casenumberformats; @circuitcourtcasesearch]. Similarly, case numbers formatted with two numbers and a space followed by “C” are Federal District Court cases; again, the numbers encode the year filed [@casenumberformats]. There were also some formats that we were able to identify as administrative claims, such as those that begin with “182,” “011,” “2011”, or “CI” [@casenumberformats; @CIcaseformat]. For these, we were unable to extract any other information, but this may be because administrative claims take a shorter time to process, and thus the year filed is not encoded into the case number. In the end, out of the 13,454 rows of data, we were left with only 171 rows whose case numbers we were unable to decipher.
+
+In exploring the information we extracted from the case number, one strange thing we noticed was that there were some negative payouts for administrative claims. *(Graph?)*
+
+As mentioned in our introduction, there are a few cases in our dataset where it looks like the person or entity suing the city has to pay them money. Out of the 13,454 observations, only 111 of those contain negative values. We felt this was at least worth investigating. We first retracted the names of the payees that were involved in a case where a negative payment was made. Next, we looped through the dataset to retrieve all the rows (positive and negative payments) that these payees were involved in. We discovered that in almost every case where there is a negative payment there is an equal positive payment involving the same payee and exact same case number. This usually showed up as doubles or triples. For example, if Jane Smith had a payment of -$1000, then there was an equal payment made at a different date (and vice versa for a positive to a negative payment). 
+
+Interestingly though, we found a lot of triples, meaning that the same payee, same case, had 2 equal negative amounts paid and 1 equal positive amount paid (or 2 positives and 1 negative). We hypothesized what to do with these values. Ultimately, we decided that they were not errors in the court reporting, but instead perhaps a case was appealed and the disposition (outcome) was overturned. Also of note, the negative values were such a small percentage of all the cases we conclude that leaving them is the right choice and does not affect our analysis.
+
+
 
 ## Conclusion
