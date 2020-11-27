@@ -259,6 +259,7 @@ df_cw %>% ggplot(aes(x = Month_to_Comptroller))+
 <!-- The bar chart indicates that the City Wide department was only sued in May and June.  -->
 
 ```{r, echo = F, include=F}
+df_cw <- df %>% filter(City_Department_Involved == "CITY WIDE")
 unique(df_cw$Primary_Cause)
 unique(df_cw$Year_to_Comptroller)
 ```
