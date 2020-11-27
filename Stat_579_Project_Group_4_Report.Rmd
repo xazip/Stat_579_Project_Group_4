@@ -4,7 +4,7 @@ subtitle: |
   | Abraham Adokwei, Robert Castaneda, Valerie Han,    
   | Marie Hardt, and Andrew Maloney  
 date: "November 2020"
-output: word_document
+output: html_document
 documentclass: report
 pagenumber: T
 margin: 1in
@@ -26,6 +26,41 @@ references:
   publisher: No. 69 C 2145 (N.D. Ill. Mar. 18, 2008)
   type: book
   issued: 2008
+- id: casenumberformats
+  title: "YOUR TAX DOLLARS AT WORK! CHICAGO POLICE LAWSUIT PAYMENTS: HOW MUCH, AND FOR WHAT?"  
+  author: 
+  - family: Iris  
+    given: Mark 
+  container-title: Virginia Journal of Criminal Law  
+  URL: 'http://virginiajournalofcriminallaw.com/wp-content/uploads/2014/08/2.1-Iris-SMW-3.31.14.pdf'
+  publisher: Virginia Journal of Criminal Law
+  type: article  
+  issued:    
+      year: 2014
+- id: circuitcourtcasesearch
+  title: "Full Electronic Docket Search | Clerk of the Circuit Court of Cook County"
+  author: 
+  - family: "Clerk of the Circuit Court of Cook County"
+  URL: 'http://www.cookcountyclerkofcourt.org/CourtCaseSearch/DocketSearch.aspx'  
+  type: article  
+- id: CIcaseformat  
+  title: "Addendum No. 2 To REQUEST FOR PROPOSAL (“RFP”) For THIRD PARTY LIABILITY CLAIMS ADMINISTRATOR SERVICE"
+  author: 
+  - family: "Department of Procurement Services - City of Chicago"
+  URL: 'https://www.chicago.gov/content/dam/city/depts/dps/ContractAdministration/Addendum/2019Addendum/Spec712589Addendum2.pdf' 
+  type: article
+- id: firedept
+  title: White firefighters battle city’s promotion policy
+  author:
+    - family: Snelling
+      given: Karen
+  URL: 'https://www.chicagoreporter.com/white-firefighters-battle-citys-promotion-policy/'
+  type: article
+  issued:
+    year: 1990
+    month: 3
+    day: 1
+
 ---
 
 ```{r}
@@ -459,7 +494,7 @@ df$Primary_Cause <-
 ```
 
 
-The City of Chicago lawsuits and administrative claims dataset contains 19 columns and 13454 observations. The main variable of interest is `Total_Paid`, which is the sum of `Payment_Amount` and `Fees_and_Costs` and thus the total amount of money paid by the City of Chicago. The `Case_Number` variable is discussed later on in this section in more detail. `Primary_Cause` is another main variable of interest, as this is the primary reason for the City to pay out the money. We describe how we combined some of the similar causes later on in this section. The `City_Department` is the department which was involved in the lawsuit. The `Disposition` is the outcome of the case (e.g. if the case was settled, dismissed, etc.). The `Date_to_Comptroller` is the date when the City actually pays out the money (not when the case is filed).
+The City of Chicago lawsuits and administrative claims dataset contains 19 columns and 13454 observations. The main variable of interest is `Total_Paid`, which is the sum of `Payment_Amount` and `Fees_and_Costs` and thus the total amount of money paid by the City of Chicago. The `Case_Number` variable is discussed later on in this section in more detail. `Primary_Cause` is another main variable of interest, as this is the primary reason for the City to pay out the money. We describe how we combined some of the similar causes later on in this section. The `City_Department` is the department which was involved in the lawsuit. The `Disposition` is the outcome of the case (e.g. if the case was settled, dismissed, etc.). The `Date_to_Comptroller` is the date when the City actually pays out the money (not when the case is filed). We create two additional variables from this, namely `Year_to_Comptroller` and `Month_to_Comptroller`.
 
 We first determined the number of missing values in each column. There were six columns that contained more than 0.1 percent of missing values. Variables (`Payment_Fund`, `Effective_Date`, `Due_Date`, and `Client_Department`) are completely missing. After further examination of the dataset, we determined that these four columns could not be filled, so we decided to remove them. The `Tort` column consisted of 50% missing values. Tort is an identifier column describing whether the case dealt with a wrongful act or an infringement of a right; 1 if yes and 0 if no.  We examined the primary cause column to determine whether to fill in the missing values as 0 or 1. Finally, we were left with a total of 79 cells that contain missing values. 64 of those missing values are missing case numbers. The remaining 15 missing values consisted of missing payments, fees, and dates to the comptroller.  The decision of whether to remove or fill in these missing values was left up to the individual performing their separate analysis.
 
@@ -469,11 +504,262 @@ The `Primary_Cause` column also contains duplicate primary causes that differ ba
 
 Another variable of interest was the `Case_Number`. On their own, the case numbers are not very useful in analyzing the data, except for a few rare cases where there are many payees for the same case, such as the Shakman litigation we discuss later on. The case numbers take on forms such as “07 L 828,” “182-A05608-1,” and “CI-12-501254-01.” After doing further research, we were able to extract other information from certain formats. For example, case numbers with two numbers and a space followed by “L,”  “M,” or  “CH” are Cook County Circuit Court cases, and the letters “L,”  “M,” and  “CH” represent the Law, Civil, and Chancery Division, respectively. The first two numbers encode the year filed; for example, 07 and 74 represent 2007 and 1974, respectively [@casenumberformats; @circuitcourtcasesearch]. Similarly, case numbers formatted with two numbers and a space followed by “C” are Federal District Court cases; again, the numbers encode the year filed [@casenumberformats]. There were also some formats that we were able to identify as administrative claims, such as those that begin with “182,” “011,” “2011”, or “CI” [@casenumberformats; @CIcaseformat]. For these, we were unable to extract any other information, but this may be because administrative claims take a shorter time to process, and thus the year filed is not encoded into the case number. In the end, out of the 13,454 rows of data, we were left with only 171 rows whose case numbers we were unable to decipher.
 
-In exploring the information we extracted from the case number, one strange thing we noticed was that there were some negative payouts for administrative claims. *(Graph?)*
+```{r case-number, echo=FALSE, message=FALSE, warning=FALSE}
+
+df1 <- df %>%
+  separate(Case_Number, into = c("Year_Filed", "Type", "Court_Case_Number"), 
+           sep = " ", fill = "left") 
+# Warning: Expected 3 pieces. Additional pieces discarded in 4 rows [4177, 7148, 8949, 10283].
+# Let's fix these values
+df1$Court_Case_Number[4177] <- "7450"
+df1$Court_Case_Number[7148] <- "51 181 Y 01253 12"
+df1$Year_Filed[7148] <- NA
+df1$Type[7148] <- NA
+df1$Court_Case_Number[8949] <- "CC001"
+df1$Type[8949] <- "PRE LIT"
+df1$Court_Case_Number[10283] <- "992"
+df1$Type[10283] <- "C L"
+
+# Examine Year_Filed values
+unique(df1$Year_Filed)
+
+df1 %>%
+  filter(Year_Filed == "69")
+# This is fine. Shakman filed his lawsuit in 1969.
+# https://en.wikipedia.org/wiki/Shakman_Decrees
+
+df1 %>%
+  filter(Year_Filed == "74")
+# Looked into this and it looks plausible. (Possibly same Westlaw case as below)
+
+df1 %>%
+  filter(Year_Filed == "75")
+# Looked into this and it looks plausible.
+
+df1 %>%
+  filter(Year_Filed == "10-3957")
+# This is definitely separated wrong
+df1 <- df1 %>%
+  mutate(
+    Type = ifelse(Year_Filed == "10-3957", NA, Type),
+    Court_Case_Number = ifelse((!is.na(Year_Filed)) & (Year_Filed == "10-3957"), 
+                               "10-3957 & 10-3965", Court_Case_Number), 
+    Year_Filed = ifelse(Year_Filed == "10-3957", NA, Year_Filed)
+  )
+sum(is.na(df1$Court_Case_Number))
+# Now let's examine the Type
+unique(df1$Type)
+
+df1 %>%
+  filter(Type == "-")
+# Looks fine, though Type doesn't really mean much in this case
+
+# Fix Year_Filed
+df1 <- df1 %>%
+  mutate(
+    Year_Filed = as.numeric(Year_Filed),
+    Year_Filed = ifelse(Year_Filed < 20, Year_Filed+2000, Year_Filed+1900)
+  ) 
+summary(df1$Year_Filed)  
+
+# Fix Type
+unique(df1$Type)
+
+df1 %>%
+  filter(Type=="CH")
+# Figured out that this is Chancery Court
+
+df1 %>%
+  filter(Type=="l")
+# Couldn't find them on this website
+# http://www.cookcountyclerkofcourt.org/CourtCaseSearch/DocketSearch.aspx
+
+df1 %>%
+  filter(Type=="m1")
+# This is a typo. Should be M1. (Found in website directly above.)
+
+# Use Type to get division and court
+df1 <- df1 %>%
+  mutate(
+    Court = ifelse(Type %in% c("L", "CH", "M1", "M", "M6", "M2", "M4", "M5", "M3", "MI", "m1"),
+                   "Cook County Circuit Court", NA),
+    Court = ifelse(Type %in% c("C", "CV"), "Federal District Court", Court),
+    Division = ifelse(Type=="L", "Law", NA),
+    Division = ifelse(Type %in% c("M1", "M", "M6", "M2", "M4", "M5", "M3", "MI", "m1"), 
+                      "Civil", Division),
+    Division = ifelse(Type=="CH", "Chancery", Division)
+  )
+
+# Now we separate out the administrative claims using the case number
+df1 <- df1 %>%
+  separate(Court_Case_Number, into = c("Administrative", "Administrative_Case_Number"), 
+           sep = "-", extra = "merge", fill = "left") 
+
+df1 <- df1 %>%
+  mutate(
+    Administrative = ifelse(Administrative %in% c("182", "011", "2011", "CI"), 
+                            TRUE, NA),
+    Administrative = ifelse(!is.na(Court), FALSE, Administrative)
+  )
+
+# number of rows with unidentified case numbers
+nrow(filter(df1, is.na(Administrative)))
+# number of rows in total
+nrow(df1)
+```
+
+In exploring the information we extracted from the case number, one strange thing we noticed was that there were some negative payouts for administrative claims. 
+
+```{r negative-claims, echo=FALSE, message=FALSE, warning=FALSE}
+df1 %>%
+  filter(Administrative) %>%
+  ggplot(aes(x = Total_Paid)) + 
+  geom_histogram(binwidth = 500) + 
+  ylab("Number of Claims") + 
+  xlab("Total Paid by the City ($)") + 
+  theme_bw()
+# Some of the claims are negative, which is interesting.
+# Why would people pay the city?
+```
 
 As mentioned in our introduction, there are a few cases in our dataset where it looks like the person or entity suing the city has to pay them money. Out of the 13,454 observations, only 111 of those contain negative values. We felt this was at least worth investigating. We first retracted the names of the payees that were involved in a case where a negative payment was made. Next, we looped through the dataset to retrieve all the rows (positive and negative payments) that these payees were involved in. We discovered that in almost every case where there is a negative payment there is an equal positive payment involving the same payee and exact same case number. This usually showed up as doubles or triples. For example, if Jane Smith had a payment of -$1000, then there was an equal payment made at a different date (and vice versa for a positive to a negative payment). 
 
 Interestingly though, we found a lot of triples, meaning that the same payee, same case, had 2 equal negative amounts paid and 1 equal positive amount paid (or 2 positives and 1 negative). We hypothesized what to do with these values. Ultimately, we decided that they were not errors in the court reporting, but instead perhaps a case was appealed and the disposition (outcome) was overturned. Also of note, the negative values were such a small percentage of all the cases we conclude that leaving them is the right choice and does not affect our analysis.
+
+## Case Number Analysis
+
+One thing that might be of interest is the difference in payout between Federal District Court and the Cook County Circuit Court. In many cases, plaintiffs can choose which court to sue in. If one court generally offers a higher payout, plaintiffs may choose to sue in that court. Thus, we plotted a box plot of the payouts based on the type of court. Because the payouts are so right-skewed, we had to use a log scale. The median payout in the Federal District Court is noticeably higher than the Cook County Circuit Court, and the spreads are similar. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+df1 %>%
+  filter(!is.na(Court)) %>%
+  ggplot(aes(x = Court, y = log10(Total_Paid))) + 
+  geom_boxplot() + 
+  labs(title = "How Much the City Paid in Court Cases by Type of Court") +
+  theme_bw()
+```
+
+We can also examine a histogram of the payouts for the two courts. Since the payouts are very right-skewed, we’ll exclude the top 10% of payments. Interestingly, there are spikes at “round” numbers (e.g. \$10k, \$20k, \$30k). These spikes seem more apparent for federal court, which may be because there are more federal cases with a lot of payees that get the same amount, such as the Shakman case we discuss in the next section.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+df1 %>%
+  filter(!is.na(Court), Total_Paid < quantile(Total_Paid, probs = .9, na.rm=TRUE),
+         Total_Paid > 0) %>%
+  ggplot(aes(x = Total_Paid)) +
+  geom_histogram(binwidth = 1000) +
+  xlab("Total Paid by the City ($)") +
+  ylab("Number of Cases") +
+  labs(title = "Amount Paid by City in Successful Court Cases (excluding top 10% of payments)") +
+  facet_wrap(~Court) + 
+  theme_bw()
+# peaks at "round" numbers (e.g. $20k, $30k, etc.)
+```
+
+
+Now that we have both the `Year_Filed` and `Year_to_Comptroller` variables, we can get a rough estimate of the length of the court case. Although the variable is not very precise (e.g. a court case that was 2 years and 1 day could be labeled as 3 years), we can still see that out of the top 5 city departments, the fire department has by far the largest IQR.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Choose certain departments
+# Let's look at the number of cases in each department
+df1 %>%
+  mutate(
+    Length = Year_to_Comptroller - Year_Filed
+  ) %>%
+  filter(!is.na(Length)) %>%
+  group_by(City_Department_Involved) %>%
+  summarize(n = n()) %>%
+  arrange(-n)
+# It looks like 300 cases might be a good cutoff
+# City Wide is analyzed separately, so let's just look at 
+# Police, Transportation, Water Management, Streets & Sanitation, Fire Department
+
+
+df1 %>%
+  mutate(
+    Length = Year_to_Comptroller - Year_Filed
+  ) %>%
+  filter(!is.na(Length), City_Department_Involved %in% 
+           c("POLICE", "TRANSPORTATION", "WATER MANAGEMENT", 
+             "STREETS & SANITATION", "FIRE DEPARTMENT")) %>%
+  ggplot(aes(x = reorder(City_Department_Involved, Length, median), y = Length)) +
+  geom_boxplot() +
+  xlab("City Department Involved") + 
+  ylab("Length of Court Case (Years)") + 
+  coord_flip() + 
+  theme_bw()
+
+# Fire Department has far larger IQR. Why?
+fire_long <- df1 %>%
+  mutate(
+    Length = Year_to_Comptroller - Year_Filed
+  ) %>%
+  filter(City_Department_Involved == "FIRE DEPARTMENT", Length >= 5) 
+unique(fire_long$Primary_Cause)
+nrow(fire_long)
+nrow(filter(df1, City_Department_Involved == "FIRE DEPARTMENT"))
+
+nrow(fire_long %>%
+  filter(Primary_Cause %in% c("FIRE FIGHTERS CLAIM REVERSE DISCRIM. 1986 LT'S EXAM", 
+                              "FIRE FIGHTERS CLAIM REVERSE DISCRIMINATION ON 1986 LT'S EXAM")))
+
+# There was a lawsuit filed against the fire department for reverse discrimination 
+# in hiring and promoting
+```
+
+Investigating the 163 fire department cases that took 5 or more years, we found that 123 of them referenced “FIRE FIGHTERS CLAIM REVERSE DISCRIMINATION ON 1986 LT'S EXAM” as the primary cause. The Chicago fire department has tests for hiring and promotion of firefighters. Due to a 1980 court order to increase minority employment, the Chicago fire department standardized the test results by race, which led to some blacks with lower scores being hired or promoted over whites with higher scores. In 1986, the firefighters’ union filed a lawsuit against the fire department for reverse discrimination in hiring and promoting [@firedept], which led to the much larger IQR in the above graph.
+
+Another critical question is whether a given lawsuit is “worth it.” Lawsuits take a great deal of money to carry out. One factor to look at is the payout. Again, we use the log scale. Examining the top five primary causes in the police department, we see that successful lawsuits with serious excessive force as their primary cause have the highest median payout of around \$100,000. In comparison, motor vehicle accidents which only caused property damage had the lowest median payout of somewhere between \$1000 to \$10,000. The three primary causes in the middle (illegal search/seizure, false arrest, and minor excessive force) have a similar median payout of somewhere between \$10,000 to \$100,000.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Let's look at the top primary causes in the Police department
+df1 %>%
+  mutate(
+    Length = Year_to_Comptroller - Year_Filed
+  ) %>%
+  filter(!is.na(Length), City_Department_Involved == "POLICE") %>%
+  group_by(Primary_Cause) %>%
+  summarize(n = n()) %>%
+  arrange(-n)
+
+df1 %>%
+  mutate(
+    Length = Year_to_Comptroller - Year_Filed
+  ) %>%
+  filter(!is.na(Length), City_Department_Involved=="POLICE") %>%
+  filter(Primary_Cause %in% c("FALSE ARREST", "EXCESSIVE FORCE/SERIOUS", 
+                              "EXCESSIVE FORCE/MINOR", "PROPERTY DAMAGE/MVA",
+                              "ILLEGAL SEARCH")) %>%
+  ggplot(aes(x = reorder(Primary_Cause, Total_Paid, median), y = log10(Total_Paid))) + 
+  geom_boxplot() +
+  xlab("Primary Cause") + 
+  ylab("log10(Total Paid by the City)") + 
+  coord_flip() + 
+  labs(title = "Total Payout by the City for the Top 5 Primary Causes") + 
+  theme_bw()
+```
+
+However, this is far from the only factor a potential plaintiff ought to take into consideration; the length of the court case is another important factor. Longer court cases generally take more money to continue. Plotting boxplots of the lengths of court cases by primary cause, we see that serious excessive force cases have a much longer median length of around 3 years compared to the shortest median length of 0 years for motor vehicle accidents that only cause property damage. While the primary causes in the middle are still the same three as for the payout boxplots, the false arrest and illegal search/seizure median lengths are closer to 1 year while the minor excessive force median length is closer to 2 years.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+df1 %>%
+  mutate(
+    Length = Year_to_Comptroller - Year_Filed
+  ) %>% 
+  # Filtering by !is.na(Length) gives us only court cases because of how the 
+  # column was originally created
+  filter(!is.na(Length), City_Department_Involved=="POLICE") %>%
+  filter(Primary_Cause %in% c("FALSE ARREST", "EXCESSIVE FORCE/SERIOUS", 
+                              "EXCESSIVE FORCE/MINOR", "PROPERTY DAMAGE/MVA",
+                              "ILLEGAL SEARCH")) %>%
+  ggplot(aes(x = reorder(Primary_Cause, Length, median), y = Length)) + 
+  geom_boxplot() +
+  xlab("Primary Cause") + 
+  ylab("Length of Court Case (Years)") + 
+  coord_flip() + 
+  labs(title = "Length of Court Case for the Top 5 Primary Causes") + 
+  theme_bw()
+```
+
 
 ## Shakman Consent Decree Litigation
 
