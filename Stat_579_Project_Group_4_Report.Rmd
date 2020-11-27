@@ -79,7 +79,7 @@ Lastly, and the reason we ultimately ended up choosing this topic over others wa
 ## Dataset Cleaning
 
 ```{r, echo = F}
-df <- read.csv("all_lawsuits_2008_to_2019.xlsx")
+df <- read_excel("all_lawsuits_2008_to_2019.xlsx")
 ```
 
 ```{r, echo = F}
@@ -513,6 +513,21 @@ From the graphic, we can see that the City of Chicago did pay close to the amoun
 ```{r, echo=F, include=F}
 sum(df_cw$Payment_Amount) # Total paid to plaintiffs
 sum(df_cw$Fees_and_Costs) # total paid to attorney
+```
+
+```{r, echo=F}
+df_cw_payees <- df_cw[-c(1:2),]
+df_cw_payees %>% ggplot(aes(x=Payment_Amount))+
+  geom_histogram(binwidth = 1000)+
+  labs(title="Payments for Shakman Consent Decree Violation Lawsuits in 2008",
+       x="Payment Amount (US$)",
+       y="Number of Payees")+
+  theme_bw()
+```
+
+```{r, echo = F, include=F}
+# Summary of payments
+df_cw_payees %>% group_by(Payment_Amount) %>% summarize(count = n())
 ```
 
 Now we will further investigate the payments to individual plaintiffs in the litigation. We can see that 1,426 people received payments from the City of Chicago due to Shakman Consent Decree litigation in 2008. The twelve different payment amounts ranged from \$250 to \$100,000. The most common payment, \$1,500, was awarded to 418 people. Only one person received $100,000 as a result of this litigation. As *Shakman v. City of Chicago* is still ongoing litigation, it seems likely that the City of Chicago will continue to pay money for violations of the Shakman Consent Decree in the future.
