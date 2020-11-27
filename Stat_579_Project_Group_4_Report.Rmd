@@ -462,6 +462,12 @@ As mentioned in our introduction, there are a few cases in our dataset where it 
 
 Interestingly though, we found a lot of triples, meaning that the same payee, same case, had 2 equal negative amounts paid and 1 equal positive amount paid (or 2 positives and 1 negative). We hypothesized what to do with these values. Ultimately, we decided that they were not errors in the court reporting, but instead perhaps a case was appealed and the disposition (outcome) was overturned. Also of note, the negative values were such a small percentage of all the cases we conclude that leaving them is the right choice and does not affect our analysis.
 
+## Shakman Consent Decree Litigation
 
+While investigating the city departments with the most lawsuits and administrative claims where the city of Chicago had to pay money, we noted that there was only one unique primary cause for the city-wide cases. All of these cases went to the comptroller in May and June 2008. We decided to investigate these lawsuits further. 
+
+The primary cause of all of the city-wide lawsuits was a violation of the Shakman Consent Decree. Per the Encyclopedia of Chicago, the Shakman Consent Decree means that government workers cannot be hired or fired based on their political beliefs or support for a particular politician or political party [@EofC]. The Shakman Consent Decree resulted from Shakman v. City of Chicago, ongoing litigation that was originally filed in 1969. Michael L. Shakman and Paul M. Lurie initially filed a lawsuit on behalf of themselves and others who claimed that the City of Chicago made support of the Cook County Regular Democratic Organization a condition of employment with the city. This condition was a violation of the plaintiffs’ constitutional rights. Other plaintiffs have joined the suit as the litigation has continued over the past fifty years [@judge].
+
+Our dataset contains information about Shakman litigation that resulted in payments by the City of Chicago in 2008. The City agreed to pay a \$12 million settlement for violations of the Shakman Consent Decree. Wayne Andersen, a judge in the federal district court, also ordered that the City should pay \$3,600,000 for attorney’s fees plus an additional $84,150.40 for attorney’s costs for the litigation (Shakman v. City of Chicago). The graphic below compares the amounts the City agreed to pay and the City’s actual disbursements according to the data we have.
 
 ## Conclusion
