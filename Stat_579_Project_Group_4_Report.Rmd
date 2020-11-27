@@ -510,6 +510,11 @@ payments2 %>% ggplot(aes(x=payment_status, y=payment_amount, fill = payment_stat
 
 From the graphic, we can see that the City of Chicago did pay close to the amounts it was required to pay, paying \$3.6 million for attorney’s fees and costs and spending about \$11.8 million to pay off the \$12 million settlement. The discrepancy could be due to taxes, interest, or some other factor.
 
+```{r, echo=F, include=F}
+sum(df_cw$Payment_Amount) # Total paid to plaintiffs
+sum(df_cw$Fees_and_Costs) # total paid to attorney
+```
+
 Now we will further investigate the payments to individual plaintiffs in the litigation. We can see that 1,426 people received payments from the City of Chicago due to Shakman Consent Decree litigation in 2008. The twelve different payment amounts ranged from \$250 to \$100,000. The most common payment, \$1,500, was awarded to 418 people. Only one person received $100,000 as a result of this litigation. As *Shakman v. City of Chicago* is still ongoing litigation, it seems likely that the City of Chicago will continue to pay money for violations of the Shakman Consent Decree in the future.
 
 ## Conclusion
