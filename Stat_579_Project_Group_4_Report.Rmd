@@ -8,6 +8,24 @@ output: pdf_document
 documentclass: report
 pagenumber: T
 margin: 1in
+references:
+- id: EofC
+  title: Shakman Decrees
+  author:
+  - family: Fross
+    given: Roger R.
+  container-title: The Electronic Encyclopedia of Chicago
+  URL: 'http://www.encyclopedia.chicagohistory.org/pages/1138.html'
+  publisher: Chicago Historical Society
+  type: article
+  issued:
+    year: 2005
+- id: judge
+  title: Shakman v. City of Chicago
+  URL: 'https://casetext.com/case/shakman-v-city-of-chicago-2'
+  publisher: No. 69 C 2145 (N.D. Ill. Mar. 18, 2008)
+  type: book
+  issued: 2008
 ---
 
 ```{r}
@@ -57,8 +75,6 @@ For our particular analysis, we were mostly interested in lawsuits, as administr
 Another interesting aspect of the data was the case number associated with each observation. Can the case number tell us something about a specific court or a type of case? Again, we did extensive work on this and will address it in more detail later. One particular area of interest was that a single case number (69 C 2145) occurred over one thousand times in the dataset. After further research, we discovered that this case number is associated with litigation that has been ongoing since 1969. This lawsuit, *Shakman v. City of Chicago*, will be discussed in further detail later.
 
 Lastly, and the reason we ultimately ended up choosing this topic over others was our interest in lawsuits involving the police department. Given that the main social talking point in the last few years in America has revolved around race and police misconduct, we were especially interested in investigating the police department. To no surprise, the police department has about double the cases than the next largest department. Our analysis will include a very focused look at the police department and the relationship between our other variables.
-
-
 
 ## Dataset Cleaning
 
@@ -468,6 +484,10 @@ While investigating the city departments with the most lawsuits and administrati
 
 The primary cause of all of the city-wide lawsuits was a violation of the Shakman Consent Decree. Per the Encyclopedia of Chicago, the Shakman Consent Decree means that government workers cannot be hired or fired based on their political beliefs or support for a particular politician or political party [@EofC]. The Shakman Consent Decree resulted from Shakman v. City of Chicago, ongoing litigation that was originally filed in 1969. Michael L. Shakman and Paul M. Lurie initially filed a lawsuit on behalf of themselves and others who claimed that the City of Chicago made support of the Cook County Regular Democratic Organization a condition of employment with the city. This condition was a violation of the plaintiffs’ constitutional rights. Other plaintiffs have joined the suit as the litigation has continued over the past fifty years [@judge].
 
-Our dataset contains information about Shakman litigation that resulted in payments by the City of Chicago in 2008. The City agreed to pay a \$12 million settlement for violations of the Shakman Consent Decree. Wayne Andersen, a judge in the federal district court, also ordered that the City should pay \$3,600,000 for attorney’s fees plus an additional $84,150.40 for attorney’s costs for the litigation (Shakman v. City of Chicago). The graphic below compares the amounts the City agreed to pay and the City’s actual disbursements according to the data we have.
+Our dataset contains information about Shakman litigation that resulted in payments by the City of Chicago in 2008. The City agreed to pay a \$12 million settlement for violations of the Shakman Consent Decree. Wayne Andersen, a judge in the federal district court, also ordered that the City should pay \$3,600,000 for attorney’s fees plus an additional $84,150.40 for attorney’s costs for the litigation [@judge]. The graphic below compares the amounts the City agreed to pay and the City’s actual disbursements according to the data we have.
+
+From the graphic, we can see that the City of Chicago did pay close to the amounts it was required to pay, paying \$3.6 million for attorney’s fees and costs and spending about \$11.8 million to pay off the \$12 million settlement. The discrepancy could be due to taxes, interest, or some other factor.
+
+Now we will further investigate the payments to individual plaintiffs in the litigation. We can see that 1,426 people received payments from the City of Chicago due to Shakman Consent Decree litigation in 2008. The twelve different payment amounts ranged from \$250 to \$100,000. The most common payment, \$1,500, was awarded to 418 people. Only one person received $100,000 as a result of this litigation. As *Shakman v. City of Chicago* is still ongoing litigation, it seems likely that the City of Chicago will continue to pay money for violations of the Shakman Consent Decree in the future.
 
 ## Conclusion
