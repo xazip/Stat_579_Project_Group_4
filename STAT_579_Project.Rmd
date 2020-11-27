@@ -1,0 +1,358 @@
+---
+title: "City of Chicago Lawsuits"
+author: "Robert Castaneda"
+date: "11/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(readxl)
+library(tidyverse)
+library(purrr) #optional
+library(shiny) #optional
+library(shinydashboard) #optional
+library(shinydashboardPlus) #optional
+library(shinythemes) #optional
+library(stringr)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+library(viridis) #optional
+#library(rayshader) #optional (Heike hates this package but I love it lol)
+library(naniar)
+library(tidyr)
+library(scales)
+library(zoo)
+df <- read_csv("all_lawsuits_2008_to_2019.csv")
+head(df)
+str(df)
+```
+
+```{r}
+##Andrew's data cleaning
+
+#### Case Number: Identification of the case
+#### Payee: Person or group of people who is/are owed money 
+#### Payment Amount:  Amount paid to the Payee
+#### Fees and Costs: Costs associated with the settlement
+#### Primary Cause: Short insight behind the settlement
+#### City Department Involved: Department of Chicago involved in the settlement
+#### Disposition: Final type of Settlement
+#### Tort: Number of wrongful acts or infringement of rights leading to civil legal liability(big no no)
+#### Date to Comptroller: Date to comptroller ?
+#### Year to Comptroller: Year to Comptroller ?
+#### Monto to Comptroller: Month to Comptroller?
+#### Payment Amount(Millions): Payment amount in terms of millions of dollars
+#### Fees and Costs(Millions): Fees and Costs in terms of millions of dollars
+#### Total Paid: Payment Amount + Fees and Cost
+#### Total Paid(millions): Total Paid in terms of millions of dollars
+
+#Spaces in column names are a no no for me so I am going to replace them with underscores using gsub
+names(df) <- gsub(" ", "_", names(df))
+
+#removing missing variables completely
+df <- df %>% select(-Payment_Fund, -Effective_Date, -Due_Date, -Client_Department)
+#Tort column is easy fix, NA should be 0
+df <- df %>%
+  mutate(Tort = ifelse(is.na(Tort) == TRUE, 0, Tort))
+
+df %>%
+  gather(key = "columns", value = "column_values") %>%
+  mutate(missing_values = is.na(column_values)) %>%
+  group_by(columns, missing_values)%>%
+  summarise(number_of_missing_values = n()) %>%
+  filter(missing_values == TRUE) %>% select(-missing_values) 
+# There are only 79 missing values left.  Do these values have a pattern or are they just missing
+df %>% filter(is.na(Case_Number) == TRUE) #Looks like case Numbers are missing on there own (1)
+df %>% filter(is.na(Date_to_Comptroller) == TRUE) # Date_to_Comptroller is the joined Year, Month, including day, they each have 2 missing values making a total of 6.  This should be re-separated to include day names could be better as well. (3)
+df %>% filter(is.na(Fees_and_Costs) == TRUE) # Fees_and_cost and Fees_and_costs(millions) are linked.  Can remove missing values or take average value based on Primary_Cause (2)
+df %>% filter(is.na(Payment_Amount) == TRUE) # Payment_Amount and Payment_Amount(millions) are linked.  The Fees_and_Costs for this observation are really high, could be an entry error.  Need to look at average Payment_Amount and Fees_Costs (2) associated with "UNLAWFUL SEARCH/FALSE ARREST
+df %>% filter(is.na(Total_Paid) == TRUE) # One of the observations for the row containing missing Total_Paid has a valid Payment amount. Possible Entry issue. The other one is linked with the really high Fees_and_Costs observation.  Therefore it could be possible that 3 observations are linked across Total_Paid, Payment_Amount, and Fees_and_Costs (2)
+df %>% filter(is.na(Primary_Cause) == TRUE) # Missing primary cost deals with Transportation department and has a date.  Probably can look up or remove
+
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("ANIM CARE & CONTROL", "ANIMAL C0NTROL", "ANIMAL CARE/CONTROL"), "ANIMAL CONTROL", df$City_Department_Involved) #Animal Services
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("BUS AFFAIRS & LCNSE", "BUS. AFFAIRS/CONS. SERV."), "BUS AFFAIRS", df$City_Department_Involved) # Bus Services
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("DEPT OF AVIATION"), "AVIATION", df$City_Department_Involved) #Aviation
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("CULT AFF & SPEC EVNT"), "CULTURAL AFFAIRS", df$City_Department_Involved) #Cultural Affairs
+df$City_Department_Involved <-
+  ifelse(df$City_Department_Involved %in% c("EMER MGMT & COMM", "EMERG COMMUNICATION", "MERG COMMUNICATIO"), "EMERGENCY COMMUNICATION", df$City_Department_Involved)#Emergency communications
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("ENVIRON."), "ENVIRONMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FAM & SUPPORT SRVCS"), "FAMILY & SUPPORT SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FIRE", "FIRE DEPT"), "FIRE DEPARTMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("FLEET MGMT"), "FLEET MANAGEMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("GEN. SERV."), "GENERAL SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("HOUSING & ECON DEV"), "HOUSING", df$City_Department_Involved)
+df$City_Department_Involved <- 
+  ifelse(df$City_Department_Involved %in% c("WATER MGMT / SEWERS", "WATER MGMT / SEWER", "WATER", "SEWERS", "SEWER", "WATER MGMT / WATER"), "WATER MANAGEMENT", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("CDOT"), "TRANSPORTATION", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("HUMAN RESOURCES"), "HUMAN SERVICES", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC HEALTH", "DISABILITY"), "HEALTH", df$City_Department_Involved)
+df$City_Department_Involved <- ifelse(df$City_Department_Involved %in% c("PUBLIC LIBRARY"), "LIBRARY", df$City_Department_Involved)
+
+```
+
+```{r}
+# create a log variable for total paid
+df %>%
+  mutate(Total_Paid_Log = ifelse(Total_Paid < 0, NA, log10(Total_Paid))) -> df
+
+
+#create dataframe of mean, sd, and count for payment amount for each department
+summary_stats_department <- df %>%
+  group_by(City_Department_Involved) %>%
+  summarise(MeanPayment = mean(Total_Paid, na.rm = T), SD = sd(Total_Paid, na.rm = T), Count = n(), 
+            Max = max(Total_Paid, na.rm = T), Min = min(Total_Paid, na.rm = T), 
+            Median = median(Total_Paid, na.rm = T)) %>%
+  arrange(desc(Count))
+```
+
+```{r}
+###valerie's new dataframe###
+
+df1 <- df %>%
+  separate(Case_Number, into = c("Year_Filed", "Type", "Court_Case_Number"), 
+           sep = " ", fill = "left") 
+# Warning: Expected 3 pieces. Additional pieces discarded in 4 rows [4177, 7148, 8949, 10283].
+# Let's fix these values
+df1$Court_Case_Number[4177] <- "7450"
+df1$Court_Case_Number[7148] <- "51 181 Y 01253 12"
+df1$Year_Filed[7148] <- NA
+df1$Type[7148] <- NA
+df1$Court_Case_Number[8949] <- "CC001"
+df1$Type[8949] <- "PRE LIT"
+df1$Court_Case_Number[10283] <- "992"
+df1$Type[10283] <- "C L"
+# Examine Year_Filed values
+unique(df1$Year_Filed)
+df1 %>%
+  filter(Year_Filed == "69")
+# This is fine. Shakman filed his lawsuit in 1969.
+# https://en.wikipedia.org/wiki/Shakman_Decrees
+df1 %>%
+  filter(Year_Filed == "74")
+# Looked into this and it looks plausible. (Possibly same Westlaw case as below)
+df1 %>%
+  filter(Year_Filed == "75")
+# Looked into this and it looks plausible.
+df1 %>%
+  filter(Year_Filed == "10-3957")
+# This is definitely separated wrong
+df1 <- df1 %>%
+  mutate(
+    Type = ifelse(Year_Filed == "10-3957", NA, Type),
+    Court_Case_Number = ifelse((!is.na(Year_Filed)) & (Year_Filed == "10-3957"), 
+                               "10-3957 & 10-3965", Court_Case_Number), 
+    Year_Filed = ifelse(Year_Filed == "10-3957", NA, Year_Filed)
+  )
+sum(is.na(df1$Court_Case_Number))
+# Now let's examine the Type
+unique(df1$Type)
+df1 %>%
+  filter(Type == "-")
+# Looks fine, though Type doesn't really mean much in this case
+# Fix Year_Filed
+df1 <- df1 %>%
+  mutate(
+    Year_Filed = as.numeric(Year_Filed),
+    Year_Filed = ifelse(Year_Filed < 20, Year_Filed+2000, Year_Filed+1900)
+  ) 
+summary(df1$Year_Filed)
+# Fix Type
+unique(df1$Type)
+df1 %>%
+  filter(Type=="CH")
+# Figured out that this is Chancery Court
+df1 %>%
+  filter(Type=="l")
+# Couldn't find them on this website
+# http://www.cookcountyclerkofcourt.org/CourtCaseSearch/DocketSearch.aspx
+df1 %>%
+  filter(Type=="m1")
+# This is a typo. Should be M1. (Found in website directly above.)
+# Use Type to get division and court
+df1 <- df1 %>%
+  mutate(
+    Court = ifelse(Type %in% c("L", "CH", "M1", "M", "M6", "M2", "M4", "M5", "M3", "MI", "m1"),
+                   "Cook County Circuit Court", NA),
+    Court = ifelse(Type %in% c("C", "CV"), "Federal District Court", Court),
+    Division = ifelse(Type=="L", "Law", NA),
+    Division = ifelse(Type %in% c("M1", "M", "M6", "M2", "M4", "M5", "M3", "MI", "m1"), 
+                      "Civil", Division),
+    Division = ifelse(Type=="CH", "Chancery", Division)
+  )
+# Now we separate out the administrative claims using the case number
+df1 <- df1 %>%
+  separate(Court_Case_Number, into = c("Administrative", "Administrative_Case_Number"), 
+           sep = "-", extra = "merge", fill = "left") 
+df1 <- df1 %>%
+  mutate(
+    Administrative = ifelse(Administrative %in% c("182", "011", "2011"), 
+                            TRUE, NA),
+    Administrative = ifelse(!is.na(Court), FALSE, Administrative)
+  )
+```
+
+```{r}
+#histogram of payment amount for police related lawsuits
+df %>%
+  filter(City_Department_Involved == "POLICE") %>%
+  ggplot(mapping = aes(x = log10(Total_Paid))) +
+  geom_histogram(binwidth = .1)
+
+#primary causes for the lawsuits involving police department
+df %>% 
+  filter(City_Department_Involved == "POLICE") %>% 
+  select(Primary_Cause) %>% 
+  table()
+
+#table of dispositions
+df %>%
+  select(Disposition) %>%
+  table()
+```
+##Investigating the Amount of Money in lawsuits over time
+```{r}
+# graph of mean log paid per month from 2008-2019
+df1 %>%
+  group_by(Year_to_Comptroller, Month_to_Comptroller) %>%
+  mutate(mean_paid = mean(Total_Paid_Log, na.rm=TRUE)) %>%
+  ggplot(mapping = aes(x = Date_to_Comptroller, y = mean_paid)) + 
+  geom_line() +
+  theme_bw()#+ 
+  #scale_x_date(breaks=date_breaks("18 months"),
+              # labels=date_format("%b-%Y")) +
+  #labs(x= 'Date', y = 'Log Mean', title = "Log Mean of Total Amount Paid per Month")
+```
+
+```{r}
+# graph of yearly total paid in millions GRAPH 1 for project
+df1 %>% 
+  drop_na(`Total_Paid(millions)`) %>% 
+  group_by(Year_to_Comptroller) %>% 
+  summarise(total_paid_year = `Total_Paid(millions)`) %>% 
+  ggplot(mapping = aes(x = factor(Year_to_Comptroller), y = total_paid_year)) + 
+  geom_col() +
+  labs(x = "Year", y = "Total Paid in Millions", title = "Total Amount Paid per Year in Lawsuits") +
+  theme_bw()
+```
+```{r}
+# graph of the yearly paid for the 4 largest departments (excluding citywide) #GRAPH 3 FOR PROJECT
+df1 %>%
+  drop_na(c(`Total_Paid(millions)`), Year_to_Comptroller) %>%
+  filter(City_Department_Involved == 'POLICE' | City_Department_Involved == 'WATER MANAGEMENT' | City_Department_Involved == 
+           'TRANSPORTATION' | City_Department_Involved == 'STREETS & SANITATION') %>% 
+  group_by(City_Department_Involved, Year_to_Comptroller) %>% 
+  summarise(total_paid = `Total_Paid(millions)`) %>% 
+  ggplot(mapping = aes(x = factor(Year_to_Comptroller), y = total_paid)) + 
+    geom_col() +
+    facet_wrap(vars(City_Department_Involved), scales = "free_y") +
+    labs(x= 'Date', y = 'Total Amount Paid(millions)', title = "Total Amount Paid in millions Per Year") +
+  theme_bw()
+```
+```{r}
+#graph for count of polce cases ober the years #GRAPH 4 FOR PROJECT
+df1 %>%
+  filter(City_Department_Involved == "POLICE") %>%
+  group_by(Year_to_Comptroller) %>%
+  summarise(count = n()) %>%
+  ggplot(mapping = aes(x = factor(Year_to_Comptroller), y = count)) +
+    geom_col() +
+    theme_bw()
+```
+
+```{r}
+# bad graph
+df %>%
+  group_by(Year_to_Comptroller, Month_to_Comptroller) %>%
+  ggplot(mapping = aes(x = Date_to_Comptroller, y = Total_Paid_Log)) +
+    geom_line() +
+    scale_x_date(breaks=date_breaks("18 months"),
+               labels=date_format("%b-%Y")) +
+    labs(x= 'Date', y = 'Log Mean', title = "Log Mean of Total Amount Paid per Month") +
+  theme_bw()
+# rolling average of total paid over time
+df %>%
+  mutate(total_paid_1month = rollmean(`Total_Paid(millions)`, 60, fill = NA)) %>%
+  group_by(factor(Year_to_Comptroller)) %>%
+  ggplot(mapping = aes(x = Date_to_Comptroller, y = total_paid_1month)) +
+    geom_line() +
+    facet_wrap(vars(Year_to_Comptroller)) +
+  theme_bw()
+```
+```{r}
+# line graph of the monthly payments by the police department
+df1 %>%
+  filter(Year_to_Comptroller == "2013" & City_Department_Involved == "POLICE") %>%
+  ggplot(mapping = aes(x = Date_to_Comptroller, y = Total_Paid_Log)) +
+    geom_line() +
+  theme_bw()
+```
+
+
+#####Investigating the negative values and the duplicate payees####
+```{r}
+# filter out all the negative vlaues
+df1 %>%
+  filter(Total_Paid < 0) -> df1_negative
+# create a vector with all the payees who have had negative values
+df1_negative_payees <- df1_negative$Payee
+
+#for loop which puts every row from the original dataframe that has the negative payees into it
+df1_positive <- data.frame()
+for (i in 1:nrow(df1)) {
+  if(df1$Payee[i] %in% df1_negative_payees){
+    df1_positive <- rbind(df1_positive, df1[i,])
+  }
+}
+# filter out people's gas, not what we want and it is taking up a lot of observations
+df1_positive %>%
+  filter(Payee != "PEOPLE'S GAS") %>%
+  arrange(desc(Payee)) -> df1_positive
+```
+
+#####Miscellaneous stuff#####
+```{r}
+#grqph of the two courts
+df1 %>%
+  drop_na(Court) %>%
+  group_by(Court) %>%
+  summarise(total_paid = `Total_Paid(millions)`) %>%
+  ggplot(mapping = aes(x = Court,y = total_paid)) +
+    geom_col() +
+  theme_bw()
+```
+
+```{r}
+#graph of average paid per lawsuit by the 4 biggest departments
+df1 %>%
+  drop_na(Total_Paid) %>%
+  filter(!is.na(Court)) %>%
+  group_by(City_Department_Involved) %>%
+  filter(City_Department_Involved == 'POLICE' | City_Department_Involved == 'WATER MANAGEMENT' | City_Department_Involved == 
+           'TRANSPORTATION' | City_Department_Involved == 'STREETS & SANITATION') %>%
+  summarise(average_lawsuit = sum(Total_Paid) / n()) %>%
+  arrange(desc(average_lawsuit)) %>%
+  ggplot(mapping = aes(x = City_Department_Involved, y = average_lawsuit / 100000)) +
+    geom_col() +
+    labs(x = "City Department", y = 'Average Paid per Lawsuit per 100k') +
+  theme_bw()
+```
+```{r}
+# graph of average paid per lawsuit # GRAPH 2 FOR PROJECT
+df1 %>%
+  filter(!is.na(Court)) %>%
+  drop_na(Total_Paid) %>%
+  group_by(Year_to_Comptroller) %>%
+  summarise(average_lawsuit = sum(Total_Paid) / n()) %>%
+  drop_na(Year_to_Comptroller) %>%
+  arrange(desc(average_lawsuit)) %>%
+  ggplot(mapping = aes(x = factor(Year_to_Comptroller), y = average_lawsuit / 100000)) +
+  geom_col() +
+  labs(x = "Year", y = 'Average Paid per Lawsuit per 100k', title = "Average Amount of Lawsuit Paid by City per $100k") +
+  theme_bw()
+```
